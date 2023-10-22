@@ -1,0 +1,46 @@
+php artisan make:model Calorie -m
+php artisan make:controller CalorieController --resource
+insert into calories (tgtdate,tgttimezone,tgtitem,tgtcalorie) values('2023-02-12',1,'ささみカツ',304);
+insert into calories (tgtdate,tgttimezone,tgtitem,tgtcalorie) values('2023-02-12',1,'つくね',540);
+insert into calories (tgtdate,tgttimezone,tgtitem,tgtcalorie) values('2023-02-12',1,'ご飯',194);
+
+//第x週の摂取カロリー合計
+select sum(tgtcalorie) as weeksum, date_format(tgtdate	 ,'%U') as week from calories group by week
+
+//laravelにjpgraphをインストールする vendorフォルダにインストールされる
+composer require amenadiel/jpgraph:^4
+//多分
+composer require amenadiel/jpgraph 4.1.1
+
+//パスの探し方
+caloriewars\vendor\composer\autoload_classmap.php
+'Amenadiel\\JpGraph\\Graph\\Axis'これを以下のように記載する
+use Amenadiel\JpGraph\Graph\Graph;
+use Amenadiel\JpGraph\Plot\LinePlot;
+
+//円グラフ用のSQL
+SELECT tgtitem,count(tgtitem) FROM `calories` WHERE tgtdate BETWEEN '2023-02-01 00:00:00' and '2023-03-19 00:00:00' group by `tgtitem`
+
+//月間カテゴリー別 合計
+SELECT
+(select catename from categories where cateid=tgtcategory) as tgtcategory,
+sum(tgtcalorie)
+FROM
+calories
+WHERE
+(tgtdate
+BETWEEN
+'2023-03-01'
+AND
+'2023-03-22'
+ )
+GROUP BY
+tgtcategory
+
+◆こちらのDBクエリだとこちらのやり方になる模様
+https://programing-school.work/laravel-eloquent-date-from-to-between/
+User::whereBetween('created_at', ['2022-01-01 00:00:00', '2022-12-31 00:00:00'])->get();
+
+https://menta.sutaruhin.com/?p=3061
+注意点は、appendsは、パラメータを配列で渡すメソッドなので、
+検索フォームはGETメソッドでないと上手く動作しない点ですのでお気をつけください
