@@ -357,20 +357,20 @@ class CalorieController extends Controller
      * 第x週の合計折れ線グラフを作成
      */
     public function makegraph(Request $request) {
-           
+
         $results = DB::select("select sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week from calories where `tgtcategory`not in (106) group by week");
         $labels = array();
-            $weeksum = array();
-            foreach($results as $result){
-                if($result->week=="00"){
-                    continue;
-                }
-                //labelの追加
-                array_push($labels,$result->week);
-                array_push($weeksum,$result->weeksum);
+        $weeksum = array();
+        foreach($results as $result){
+            if($result->week=="00"){
+                continue;
             }
-            
-            return view('calorie.statics', compact('labels','weeksum'));
+            //labelの追加
+            array_push($labels,$result->week);
+            array_push($weeksum,$result->weeksum);
+        }
+
+        return view('calorie.statics', compact('labels','weeksum'));
     }
 
     /**
