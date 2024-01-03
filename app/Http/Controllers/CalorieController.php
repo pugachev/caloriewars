@@ -370,7 +370,12 @@ class CalorieController extends Controller
             array_push($weeksum,$result->weeksum);
         }
 
-        return view('calorie.statics', compact('labels','weeksum'));
+        $categories = DB::table('categories')
+        ->select('cateid','catename')
+        ->orderBy('cateid','asc')
+        ->get();
+
+        return view('calorie.statics', compact('labels','weeksum','categories'));
     }
 
     /**

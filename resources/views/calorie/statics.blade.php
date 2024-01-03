@@ -7,6 +7,13 @@
 <?php
     $labels = json_encode($labels);
     $weeksum = json_encode($weeksum);
+
+    $cate_data="";
+    //戻りがオブジェクト型
+    foreach($categories as $val){
+        $cate_data .= "<option value='". $val->cateid;
+        $cate_data .= "'>". $val->catename. "</option>";
+    }
 ?>
 
 <div class="mx-auto col-12" style="text-align:center;">
@@ -117,6 +124,12 @@
                                 <option value="1">昼</option>
                                 <option value="2">夜</option>
                             </select>
+                        </div>
+                        <div class="form-group mb-1">
+                            <span class="col-2">種類</span>
+                                <select name="tgtcategory" id="tgtcategory" class="browser-default custom-select">
+                                    <?php echo $cate_data; ?>
+                                </select>
                         </div>
                         <div class="form-group mb-1">
                             <span class="col-2">項目</span>

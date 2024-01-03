@@ -153,7 +153,7 @@ foreach($categorieslist as $val){
                         </div>
                         <div class="form-group mb-1">
                             <span class="col-2">種類</span>
-                                <select id="utgtcategory" name="tgtcategory" class="browser-default custom-select">
+                                <select name="tgtcategory" id="tgtcategory" class="browser-default custom-select">
                                     <?php echo $cate_data; ?>
                                 </select>
                         </div>
