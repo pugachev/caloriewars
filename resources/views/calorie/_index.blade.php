@@ -20,14 +20,53 @@ foreach($categories as $val){
     <div class="mr-2"><h4><small>目標:<strong>1600kcal</strong></small></h4></div>
 </div>
 <div class="mx-auto col-12" style="text-align:center;">
-    <div id="mini-calendar"></div>
+    <div class="table-responsive-sm text-nowrap">
+      <table class="table table-striped" id="mytable">
+          <thead>
+              <tr>
+                  <th class="text-center">日付</th>
+                  <th class="text-center">実熱量合計</th>
+                  <th class="text-center">実運動量合計</th>
+                  <th class="text-center">計算済熱量合計</th>
+                  <th class="text-center">目標との差分</th>
+                  <th class="text-center">詳細</th>
+              </tr>
+          </thead>
+          <tbody>
+              <?php
+                foreach($results as $result){
+                    $tmpdate = date('Y-m-d',strtotime($result->tgtdate));
+                    echo '<tr>';
+                    echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).'</td>';
+                    echo '<td class="text-center">'.$result->sumcolorie.'</td>';
+                    echo '<td>' . (intval($result->consump)).'</td>';
+                    if((intval($result->sumcolorie)-(intval($result->consump)))>=1600){
+                        echo '<td class="text-center" style="color:red;font-weight:bold;">'.(intval($result->sumcolorie)-(intval($result->consump))).'</td>';
+                    }else{
+                        echo '<td class="text-center" style="color:blue;font-weight:bold;">'.(intval($result->sumcolorie)-(intval($result->consump))).'</td>';
+                    }
+                    if((intval(1600)-(intval($result->sumcolorie)-(intval($result->consump))))< 0){
+                        echo '<td class="text-center" style="color:red;font-weight:bold;">'.(intval(1600)-(intval($result->sumcolorie)-(intval($result->consump)))).'</td>';
+                    }else{
+                        echo '<td class="text-center" style="color:blue;font-weight:bold;">'.(intval(1600)-(intval($result->sumcolorie)-(intval($result->consump)))).'</td>';
+                    }
+                    echo '<td class="text-center"><a class="btn btn-primary" href='.url("/calorie/show/$tmpdate").'>詳細</a></td>';
+                    echo '</tr>';
+                }
+              ?>
+          </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-center mt-5">
+        {{-- {!! $results->links() !!} --}}
+        {{$results->appends(request()->query())->links()}}
+    </div>
 </div>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/js/jquery.tablesorter.min.js"></script>
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
@@ -36,15 +75,34 @@ foreach($categories as $val){
 </style>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
-<script src="{{ asset('js/jquery.minicalendar.js') }}"></script>
 <script type="text/javascript">
-(function($) {
-	$(function() {
-		$('#mini-calendar').miniCalendar();
-	});
-})(jQuery);
-</script>
+  $(function(){
+    setTimeout(function () {
+        //保存後に画面がリダイレクトされることを利用している
+        $('#alert').fadeOut(3000);
+    }, 3000);
 
+    $('.datepicker.datepicker-dropdown').datepicker({
+        beforeShow: function(input, inst){
+            setTimeout(function(){
+                $('#tgtdate')
+                    .css(
+                        'z-index',
+                        String(parseInt($(input).parents('.modal').css('z-index'),10) + 1)
+                    );
+            },0);
+        }
+    });
+
+    // $('#mytable').tablesorter();
+
+  });
+  $('.datepicker').datepicker({
+    // オプションを設定
+    language:'ja', // 日本語化
+    format: 'yyyy/mm/dd', // 日付表示をyyyy/mm/ddにフォーマット
+  });
+</script>
 </body>
 </html>
 <!-- 新規作成モーダルダイアログ -->
