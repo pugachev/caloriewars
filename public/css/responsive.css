@@ -26,6 +26,28 @@ body {
 /* ========================================
  * #mini-calendar
  * ========================================*/
+.button-container-calendar {
+    position: relative;
+    margin-bottom: 1em;
+    overflow: hidden;
+    clear: both;
+  }
+#previous {
+    float: left;
+}
+#next {
+    float: right;
+}
+.button-container-calendar button {
+    cursor: pointer;
+    display: inline-block;
+    zoom: 1;
+    background: #00a2b7;
+    color: #fff;
+    border: 1px solid #0aa2b5;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
 #mini-calendar .calendar-year-month {
 	text-align: center;
 	font-size: 32px;
@@ -110,7 +132,6 @@ body {
 }
 #mini-calendar [class*=calender-label] {
 	font-size: 11px;
-    height:100%;
 	line-height: 1.3;
 	color: #000;
 	background: #FCEBCF;
@@ -152,7 +173,6 @@ body {
 	#mini-calendar td {
 		display: block;
 		width: 100%;
-        height: 100%;
 		padding: 0;
 	}
 	#mini-calendar td {

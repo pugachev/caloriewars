@@ -452,4 +452,40 @@ class CalorieController extends Controller
           error_log($ex->getMessage());
         }
     }
+
+    public function getdata()
+    {
+        $tgt = $_GET['tgtdate'];
+
+        //当年を取得
+        $year = explode('/',$tgt)[0];
+        //当月を取得
+        $month = sprintf('%02d',explode('/', $tgt)[1]);
+        dd($tgt);
+        $tgtdate = $year."-".$month;
+        //各日毎の合計値を取得
+        $dbresult = DB::table('accounts')
+             ->select('tgtdate',DB::raw("sum(tgtprice) as tgtprice"))
+             ->where('tgtdate','like',$tgtdate.'%')
+             ->groupBY('tgtdate')
+             ->orderBy('tgtdate','asc')
+             ->get();
+        //現在の合計値を取得
+        $monthlydbresult = DB::select("SELECT sum(tgtprice) as monthlydbresult FROM `accounts` WHERE tgtdate BETWEEN ? AND ? group by tgtdate= ?",array($tgtdate.'-01' ,$tgtdate.'-31 23:59:59',$tgtdate));
+        $result=array('year'=>$year,'month'=>$month);
+        $result['tgtamount']=tgtamount;
+        if(!empty($monthlydbresult[0]->monthlydbresult)){
+            $result['monthlydbresult']=$monthlydbresult[0]->monthlydbresult;
+        }else{
+            $result['monthlydbresult']=0;
+        }
+
+        // error_log($monthlydbresult[0]->monthlydbresult, 3, 'debug');
+        $result['event']=array();
+        foreach($dbresult as $val){
+            array_push($result['event'],array('day'=>date('j',strtotime($val->tgtdate)),'espense'=>$val->tgtprice));
+        }
+
+        return json_encode($result);
+    }
 }

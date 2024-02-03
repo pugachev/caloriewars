@@ -19,9 +19,9 @@ foreach($categories as $val){
 <div class="mx-auto col-12 d-flex flex-row justify-content-center">
     <div class="mr-2"><h4><small>目標:<strong>1600kcal</strong></small></h4></div>
 </div>
-<div class="mx-auto col-12" style="text-align:center;">
-    <div id="mini-calendar"></div>
-</div>
+    <div id="wrap">
+        <div id="mini-calendar"></div>
+    </div>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
@@ -38,11 +38,49 @@ foreach($categories as $val){
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
 <script src="{{ asset('js/jquery.minicalendar.js') }}"></script>
 <script type="text/javascript">
-(function($) {
-	$(function() {
-		$('#mini-calendar').miniCalendar();
-	});
-})(jQuery);
+    $(function(){
+
+
+        setTimeout(function () {
+            //保存後に画面がリダイレクトされることを利用している
+            $('#alert').fadeOut(3000);
+        }, 3000);
+
+        $('.datepicker.datepicker-dropdown').datepicker({
+            beforeShow: function(input, inst){
+                setTimeout(function(){
+                    $('#tgtdate')
+                        .css(
+                            'z-index',
+                            String(parseInt($(input).parents('.modal').css('z-index'),10) + 1)
+                        );
+                },0);
+            }
+        });
+
+        $('#mini-calendar').miniCalendar();
+    });
+    function previous(){
+        let tgtyearmonth = $('.calendar-year-month')[0].innerText.split('/')[0] + '/' + (Number($('.calendar-year-month')[0].innerText.split('/')[1])-1);
+        $('#mini-calendar')[0]=null;
+        $('#mini-calendar').miniCalendar(tgtyearmonth);
+    }
+    function next(){
+        let tgtyearmonth = $('.calendar-year-month')[0].innerText.split('/')[0] + '/' + (Number($('.calendar-year-month')[0].innerText.split('/')[1])+1);
+        $('#mini-calendar')[0]=null;
+        $('#mini-calendar').miniCalendar(tgtyearmonth);
+    }
+    // function detail(year,month,day){
+    function detail(year,month,day){
+        $tgt = year+"/"+month+"/"+day;
+        location.href="getDetail?tgtdate="+$tgt;
+
+    }
+    $('.datepicker').datepicker({
+        // オプションを設定
+        language:'ja', // 日本語化
+        format: 'yyyy/mm/dd', // 日付表示をyyyy/mm/ddにフォーマット
+    });
 </script>
 
 </body>

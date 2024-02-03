@@ -1,6 +1,6 @@
 {
 	"year": 2024,
-	"month": 1,
+	"month": 10,
 	"event": [
 		{ "day": "1", "title": "イベント1", "type": "blue" },
 		{ "day": "2", "title": "イベント2", "type": "red" },

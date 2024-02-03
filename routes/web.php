@@ -22,5 +22,7 @@ Route::post('/calorie/chartgraph', [App\Http\Controllers\CalorieController::clas
 Route::post('/calorie/store', [App\Http\Controllers\CalorieController::class, 'store'])->name('calorie.store');
 Route::post('/calorie/update', [App\Http\Controllers\CalorieController::class, 'update'])->name('calorie.update');
 Route::post('/calorie/destroy', [App\Http\Controllers\CalorieController::class, 'destroy'])->name('calorie.destroy');
+Route::get('/getdata', [App\Http\Controllers\CalorieController::class, 'getdata'])->name('getdata');
+Route::post('/getdata', [App\Http\Controllers\CalorieController::class, 'getdata'])->name('getdata');
 Auth::routes();
 
