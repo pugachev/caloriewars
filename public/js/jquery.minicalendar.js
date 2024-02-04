@@ -25,7 +25,8 @@
       //表示する年月
       if(Object.keys(option).length !== 0){
           this.year = option.split('/')[0];
-          this.month  = option.split('/')[1];
+        //   this.month  = option.split('/')[1];
+        this.month = ("0"+(option.split('/')[1]));
       }else{
           this.year = this.year || new Date().getFullYear();
         //月　後ろから２桁の文字取得することで、1月は01、12月は12月になるようする。
