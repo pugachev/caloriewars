@@ -47,3 +47,19 @@ https://menta.sutaruhin.com/?p=3061
 
 
 select sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week from calories where `tgtcategory`not in (106) and DATE_FORMAT(tgtdate,'%Y')='2023' group by week;
+
+
+// 期間指定・タイムゾーン指定でカロリー合計値を表示する
+select
+	DATE_FORMAT(c.tgtdate,'%Y-%m-%d') as tgtdate ,
+	c.tgttimezone ,
+	sum(c.tgtcalorie)
+from
+	calories c
+where
+	c.tgtdate BETWEEN '2024-01-01' AND '2024-01-31'
+group by
+	c.tgtdate,
+	c.tgttimezone
+order BY
+	c.tgtdate desc;
