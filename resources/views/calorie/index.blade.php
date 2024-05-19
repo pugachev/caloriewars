@@ -6,11 +6,19 @@
 @endif
 
 <?php
+// 摂取熱量カテゴリ
 $cate_data="";
 //戻りがオブジェクト型
 foreach($categories as $val){
     $cate_data .= "<option value='". $val->cateid;
     $cate_data .= "'>". $val->catename. "</option>";
+}
+// 運動量・体重カテゴリ
+$physical_cate_data="";
+//戻りがオブジェクト型
+foreach($physical_categories as $val){
+    $physical_cate_data .= "<option value='". $val->physical_cateid;
+    $physical_cate_data .= "'>". $val->physical_catename. "</option>";
 }
 ?>
 <div class="mx-auto col-12" style="text-align:center;">
@@ -25,10 +33,11 @@ foreach($categories as $val){
           <thead>
               <tr>
                   <th class="text-center">日付</th>
-                  <th class="text-center">実熱量合計</th>
-                  <th class="text-center">実運動量合計</th>
-                  <th class="text-center">計算済熱量合計</th>
-                  <th class="text-center">目標との差分</th>
+                  <th class="text-center">摂取熱量合計</th>
+                  <th class="text-center">消費熱量合計</th>
+                  <th class="text-center">歩行距離</th>
+                  <th class="text-center">歩数</th>
+                  <th class="text-center">体重</th>
                   <th class="text-center">詳細</th>
               </tr>
           </thead>
@@ -39,17 +48,6 @@ foreach($categories as $val){
                     echo '<tr>';
                     echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).'</td>';
                     echo '<td class="text-center">'.$result->sumcolorie.'</td>';
-                    echo '<td>' . (intval($result->consump)).'</td>';
-                    if((intval($result->sumcolorie)-(intval($result->consump)))>=1600){
-                        echo '<td class="text-center" style="color:red;font-weight:bold;">'.(intval($result->sumcolorie)-(intval($result->consump))).'</td>';
-                    }else{
-                        echo '<td class="text-center" style="color:blue;font-weight:bold;">'.(intval($result->sumcolorie)-(intval($result->consump))).'</td>';
-                    }
-                    if((intval(1600)-(intval($result->sumcolorie)-(intval($result->consump))))< 0){
-                        echo '<td class="text-center" style="color:red;font-weight:bold;">'.(intval(1600)-(intval($result->sumcolorie)-(intval($result->consump)))).'</td>';
-                    }else{
-                        echo '<td class="text-center" style="color:blue;font-weight:bold;">'.(intval(1600)-(intval($result->sumcolorie)-(intval($result->consump)))).'</td>';
-                    }
                     echo '<td class="text-center"><a class="btn btn-primary" href='.url("/calorie/show/$tmpdate").'>詳細</a></td>';
                     echo '</tr>';
                 }
@@ -110,7 +108,7 @@ foreach($categories as $val){
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">新規作成</h5>
+                <h5 class="modal-title" id="exampleModalLabel">摂取熱量</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
                 </button>
@@ -138,11 +136,54 @@ foreach($categories as $val){
                                 </select>
                         </div>
                         <div class="form-group mb-1">
-                            <span class="col-2">項目</span>
+                            <span class="col-2">メモ</span>
                             <input type="text" id="utgtitem" name="tgtitem" class="form-control">
                         </div>
                         <div class="form-group mb-1">
                             <span class="col-2">熱量</span>
+                            <input type="text" id="utgtcalorie" name="tgtcalorie" class="form-control">
+                        </div>
+
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- 新規作成モーダルダイアログ -->
+<div class="modal fade" id="store_physical_info" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel2">運動量・体重</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{{route('calorie.store_physical_info')}}" class="form-inline" enctype="multipart/form-data" autocomplete="off">
+                @csrf
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="form-group mb-1">
+                            <span class="col-2">日付</span>
+                            <input type="text" class="datepicker datepicker-dropdown" id="tgtdate" name="tgtdate">
+                        </div>
+                        <div class="form-group mb-1">
+                            <span class="col-2">種類</span>
+                                <select name="tgtcategory" id="tgtcategory" class="browser-default custom-select">
+                                    <?php echo $physical_cate_data; ?>
+                                </select>
+                        </div>
+                        <div class="form-group mb-1">
+                            <span class="col-2">メモ</span>
+                            <input type="text" id="utgtitem" name="tgtitem" class="form-control">
+                        </div>
+                        <div class="form-group mb-1">
+                            <span class="col-2">数値</span>
                             <input type="text" id="utgtcalorie" name="tgtcalorie" class="form-control">
                         </div>
 

@@ -24,111 +24,59 @@ class CalorieController extends Controller
      */
     public function index(Request $request)
     {
+        // 摂取熱量データ
         $results = "";
-        $results_consump="";
-        $searchflg=false;
-        //oldヘルパー用
-        if(isset($request->searchword) && !empty($request->searchword)){
-            $searchword=$request->searchword;
-            $searchflg=true;
-        }
-        if(isset($request->searchcategory) && !empty($request->searchcategory)){
-            $searchcategory=$request->searchcategory;
-            $searchflg=true;
-        }
-        if(isset($request->from) && !empty($request->from)){
-            $from=$request->from;
-            $searchflg=true;
-        }
-        if(isset($request->to) && !empty($request->to)){
-            $to=$request->to;
-            $searchflg=true;
-        }
-        if(isset($request->overcalorie) && !empty($request->overcalorie)){
-            $overcalorie=$request->overcalorie;
-            $searchflg=true;
-        }
+        $results = DB::table('calories')
+        ->selectRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') as tgtdate ,sum(calories.tgtcalorie) as sumcolorie")
+        ->where('tgtcategory','!=','106')
+        ->groupByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d')")
+        ->orderByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') desc")
+        ->paginate(10);
 
-        if($searchflg){
-            //ここで検索を実施する
-            $results = $this->search($request);
+        // 運動量・体重データ
+        $physical_results = "";
 
 
-            $categories = DB::table('categories')
-            ->select('cateid','catename')
-            ->orderBy('cateid','asc')
-            ->get();
+        // dd($physical_results);
+        // $results_consump = DB::table('calories')
+        // ->select('calories.tgtdate as tgtdate', DB::raw("sum(calories.tgtcalorie) as sumcolorie"))
+        // ->where('tgtcategory','106')
+        // ->groupBy('calories.tgtdate')
+        // ->orderBy('calories.tgtdate','desc')
+        // ->paginate(10);
 
-           return view('calorie.search', compact('results','categories'));
-            //検索結果の日付から該当日付の運動量を取得する
-            // $results_consump = $this->searchconsump($request);
-            // $results_consump=[];
-            // foreach($results as $key=>$result){
-            //     $query = DB::table('calories')
-            //     ->select('calories.tgtdate as tgtdate','calories.tgtcalorie as tgtcalorie')
-            //     ->where('tgtcategory','106')
-            //     ->where('tgtdate',$result->tgtdate)
-            //     ->orderBy('calories.tgtdate','desc')
-            //     ->get();
-
-            //     //配列に格納する
-            //     //「+=」にすると一つの連想配列となる
-            //     //[]にすると要素分の連想配列になってしまう
-            //     $results_consump+=array($query[0]->tgtdate=>$query[0]->tgtcalorie);
-            // }
-
-
-
-            // //運動量をマージする
-            // foreach($results as $key=>$result){
-            //     if(array_key_exists($result->tgtdate,$results_consump)){
-            //         $result->consump = $results_consump[$result->tgtdate];
-            //         // dd($results_consump[$result->tgtdate]);
-            //     }
-            // }
-
-            // foreach($results as $key=>$result){
-            //     if(empty($result->consump)){
-            //         $result->consump=0;
-            //     }
-            // }
-        }else{
-            $results = DB::table('calories')
-            ->select('calories.tgtdate as tgtdate', DB::raw("sum(calories.tgtcalorie) as sumcolorie"))
-            ->where('tgtcategory','!=','106')
-            ->groupBy('calories.tgtdate')
-            ->orderBy('calories.tgtdate','desc')
-            ->paginate(10);
-
-            $results_consump = DB::table('calories')
-            ->select('calories.tgtdate as tgtdate', DB::raw("sum(calories.tgtcalorie) as sumcolorie"))
-            ->where('tgtcategory','106')
-            ->groupBy('calories.tgtdate')
-            ->orderBy('calories.tgtdate','desc')
-            ->paginate(10);
-
-            //運動量をマージする
-            foreach($results as $key=>$result){
-                foreach($results_consump as $keyc => $resultcon){
-                    if($result->tgtdate==$resultcon->tgtdate){
-                        $result->consump = $resultcon->sumcolorie;
-                    }
-                }
-            }
-
-            foreach($results as $key=>$result){
-                if(empty($result->consump)){
-                    $result->consump=0;
-                }
+        //運動量をマージする
+        foreach($results as $key=>$result){
+            // dd($result->tgtdate);
+            $physical_results = DB::table('physical_data')
+            ->select('tgt_physical_category',"tgt_physical_data")
+            ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$result->tgtdate])->get();
+            // ->orderBy("physical_data.tgt_physical_category desc")->get();
+            foreach($physical_results as $key=>$val){
+                // dd($val->tgt_physical_category.' '.$val->tgt_physical_data);
+                dd($val->tgt_physical_data);
             }
         }
 
+        // foreach($results as $key=>$result){
+        //     if(empty($result->consump)){
+        //         $result->consump=0;
+        //     }
+        // }
+
+        // 摂取熱量カテゴリ
         $categories = DB::table('categories')
              ->select('cateid','catename')
              ->orderBy('cateid','asc')
              ->get();
 
-        return view('calorie.index', compact('results','categories'));
+        // 運動量・体重カテゴリ
+        $physical_categories = DB::table('physical_categories')
+             ->select('physical_cateid','physical_catename')
+             ->orderBy('physical_cateid','asc')
+             ->get();
+
+        return view('calorie.index', compact('results','categories','physical_categories'));
     }
 
     /**
@@ -172,6 +120,15 @@ class CalorieController extends Controller
     }
 
     /**
+     * 運動量・体重情報を登録する
+     */
+    public function store_physical_info(Request $request)
+    {
+        dd($request);
+        return redirect()->to('calorie')->with('message', 'テストです');
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param  int  $id
@@ -181,8 +138,7 @@ class CalorieController extends Controller
     {
         $results = DB::table('calories')
              ->select('calories.id as id','tgtdate','categories.cateid as cateid','categories.catename as catename','tgttimezone','tgtitem','tgtcalorie')
-             ->leftJoin('categories','calories.tgtcategory','=','categories.cateid')
-             ->where('tgtdate',$tgtdate)
+             ->leftJoin('physical_categories','DATE_FORMAT(calories.tgtdate,"%Y-%m-%d")','=','DATE_FORMAT(physical_categories.tgtcategory,"%Y-%m-%d")')
              ->orderBy('tgttimezone','asc')
              ->paginate(10);
 

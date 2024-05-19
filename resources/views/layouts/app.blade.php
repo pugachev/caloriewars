@@ -100,12 +100,15 @@ foreach($categories as $val){
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
               <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
-                  <a class="nav-link" href="#" data-toggle="modal" data-target="#dataCreate">新規作成<span class="sr-only">(current)</span></a>
+                  <a class="nav-link" href="#" data-toggle="modal" data-target="#dataCreate">摂取熱量<span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="{{route('calorie.makegraph')}}" >統計画面</a>
-                </li>
+                    <a class="nav-link" href="#" data-toggle="modal" data-target="#store_physical_info">運動量・体重<span class="sr-only">(current)</span></a>
+                  </li>
                 <li class="nav-item active">
+                    <a class="nav-link" href="{{route('calorie.makegraph')}}" >推移グラフ</a>
+                </li>
+                {{-- <li class="nav-item active">
                     <a class="nav-link" href="{{route('calorie.chartgraph')}}" >チャートグラフ画面</a>
                 </li>
               </ul>
@@ -123,7 +126,7 @@ foreach($categories as $val){
                 <input class="form-control mr-sm-2" type="search" placeholder="検索" id="searchword" name="searchword" value="{{old('searchword')}}" aria-label="検索">
                 <input type="hidden" value="" id="hiddenCate" name="hiddenCate">
                 <button class="btn btn-info my-2 my-sm-0" style="color:#fff;" type="submit">検索</button>
-              </form>
+              </form> --}}
             </div>
         </nav>
         <main class="py-4">

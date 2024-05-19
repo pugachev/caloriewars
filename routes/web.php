@@ -20,6 +20,7 @@ Route::get('/calorie/makegraph}', [App\Http\Controllers\CalorieController::class
 Route::get('/calorie/chartgraph', [App\Http\Controllers\CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
 Route::post('/calorie/chartgraph', [App\Http\Controllers\CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
 Route::post('/calorie/store', [App\Http\Controllers\CalorieController::class, 'store'])->name('calorie.store');
+Route::post('/calorie/store_physical_info', [App\Http\Controllers\CalorieController::class, 'store_physical_info'])->name('calorie.store_physical_info');
 Route::post('/calorie/update', [App\Http\Controllers\CalorieController::class, 'update'])->name('calorie.update');
 Route::post('/calorie/destroy', [App\Http\Controllers\CalorieController::class, 'destroy'])->name('calorie.destroy');
 Auth::routes();
