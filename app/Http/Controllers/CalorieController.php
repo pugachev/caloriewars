@@ -24,6 +24,9 @@ class CalorieController extends Controller
      */
     public function index(Request $request)
     {
+        // 画面に渡すデータ 摂取熱量データ + 運動量データ
+        $totaldata = [];
+
         // 摂取熱量データ
         $results = "";
         $results = DB::table('calories')
@@ -50,19 +53,35 @@ class CalorieController extends Controller
             // dd($result->tgtdate);
             $physical_results = DB::table('physical_data')
             ->select('tgt_physical_category',"tgt_physical_data")
-            ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$result->tgtdate])->get();
-            // ->orderBy("physical_data.tgt_physical_category desc")->get();
+            ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$result->tgtdate])
+            ->orderByRaw("physical_data.tgt_physical_category asc")->get();
+            // physicalデータを格納するための配列を用意する
+            $tmp = array();
             foreach($physical_results as $key=>$val){
-                // dd($val->tgt_physical_category.' '.$val->tgt_physical_data);
-                dd($val->tgt_physical_data);
+                switch($val->tgt_physical_data){
+                    case 200:
+                    break;
+                    case 200:
+                        break;
+                        case 200:
+                            break;
+                            case 200:
+                                break;
+                }
+                $result->test1 = $val->tgt_physical_data;
+                // $result->tmp[] = array($val->tgt_physical_category,$val->tgt_physical_data);
+                // dd($val->tgt_physical_category.'   '.$val->tgt_physical_data);
             }
         }
 
-        // foreach($results as $key=>$result){
-        //     if(empty($result->consump)){
-        //         $result->consump=0;
-        //     }
-        // }
+        dd($results[0]);
+
+        foreach($results as $result){
+
+            foreach($result->tmp as $val){
+                dd($val[0].'   '.$val[1]);
+            }
+        }
 
         // 摂取熱量カテゴリ
         $categories = DB::table('categories')

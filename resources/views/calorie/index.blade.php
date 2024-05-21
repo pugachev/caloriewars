@@ -20,6 +20,7 @@ foreach($physical_categories as $val){
     $physical_cate_data .= "<option value='". $val->physical_cateid;
     $physical_cate_data .= "'>". $val->physical_catename. "</option>";
 }
+
 ?>
 <div class="mx-auto col-12" style="text-align:center;">
     <div><h3>食べすぎやろ</h3></div>
@@ -47,6 +48,9 @@ foreach($physical_categories as $val){
                     $tmpdate = date('Y-m-d',strtotime($result->tgtdate));
                     echo '<tr>';
                     echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).'</td>';
+                    foreach($result->tmp as $val){
+                        // echo '<td>' . $val[1].'</td>';
+                    }
                     echo '<td class="text-center">'.$result->sumcolorie.'</td>';
                     echo '<td class="text-center"><a class="btn btn-primary" href='.url("/calorie/show/$tmpdate").'>詳細</a></td>';
                     echo '</tr>';
