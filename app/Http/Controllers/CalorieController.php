@@ -48,40 +48,61 @@ class CalorieController extends Controller
         // ->orderBy('calories.tgtdate','desc')
         // ->paginate(10);
 
+        $merged_data = array();
+        $tmp = array();
         //運動量をマージする
-        foreach($results as $key=>$result){
+        foreach($results as $result){
             // dd($result->tgtdate);
+            $result->walking_time = 0;
+            $result->walking_steps = 0;
+            $result->walking_distance = 0;
+            $result->confirmed_weight = 0;
+            $result->confirmed_calorie = 0;
             $physical_results = DB::table('physical_data')
             ->select('tgt_physical_category',"tgt_physical_data")
             ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$result->tgtdate])
             ->orderByRaw("physical_data.tgt_physical_category asc")->get();
-            // physicalデータを格納するための配列を用意する
-            $tmp = array();
-            foreach($physical_results as $key=>$val){
-                switch($val->tgt_physical_data){
-                    case 200:
-                    break;
-                    case 200:
-                        break;
+            if(isset($physical_results)){
+                // physicalデータを格納するための配列を用意する
+                foreach($physical_results as $key=>$val){
+                    switch($val->tgt_physical_category){
+                        // 歩行時間
                         case 200:
-                            break;
-                            case 200:
-                                break;
+                            $result->walking_time = $val->tgt_physical_data;
+                        break;
+                        // 歩数
+                        case 201:
+                            $result->walking_steps = $val->tgt_physical_data;
+                        break;
+                        // 歩行距離
+                        case 202:
+                            $result->walking_distance = $val->tgt_physical_data;
+                        break;
+                        // 確定体重
+                        case 203:
+                            $result->confirmed_weight = $val->tgt_physical_data;
+                        break;
+                        // 確定熱量
+                        case 204:
+                            $result->confirmed_calorie = $val->tgt_physical_data;
+                            // dd($result);
+                        break;
+                        default:
+                        break;
+                    }
                 }
-                $result->test1 = $val->tgt_physical_data;
-                // $result->tmp[] = array($val->tgt_physical_category,$val->tgt_physical_data);
-                // dd($val->tgt_physical_category.'   '.$val->tgt_physical_data);
             }
+
+
+            $merged_data[] = $result;
+
         }
 
-        dd($results[0]);
+        // dd($merged_data);
 
-        foreach($results as $result){
-
-            foreach($result->tmp as $val){
-                dd($val[0].'   '.$val[1]);
-            }
-        }
+        // foreach($results as $result){
+        //     dd($result);
+        // }
 
         // 摂取熱量カテゴリ
         $categories = DB::table('categories')
@@ -95,7 +116,7 @@ class CalorieController extends Controller
              ->orderBy('physical_cateid','asc')
              ->get();
 
-        return view('calorie.index', compact('results','categories','physical_categories'));
+        return view('calorie.index', compact('merged_data','categories','physical_categories'));
     }
 
     /**

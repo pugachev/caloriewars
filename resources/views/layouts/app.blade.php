@@ -1,6 +1,7 @@
 <?php
 use Illuminate\Support\Facades\DB;
 use App\Models\Calorie;
+
 $categories = DB::table('categories')
              ->select('cateid','catename')
              ->orderBy('cateid','asc')
