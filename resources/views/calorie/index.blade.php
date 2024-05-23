@@ -7,7 +7,9 @@
 
 <?php
 use Illuminate\Pagination\Paginator;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Collection; //追記
+use Illuminate\Pagination\LengthAwarePaginator; //追記
 // 摂取熱量カテゴリ
 $cate_data="";
 //戻りがオブジェクト型
@@ -22,20 +24,7 @@ foreach($physical_categories as $val){
     $physical_cate_data .= "<option value='". $val->physical_cateid;
     $physical_cate_data .= "'>". $val->physical_catename. "</option>";
 }
-// 配列からコレクションへ変換
-$collection = collect($merged_data);
 
-// 1ページごとの表示件数
-$perPage = 6;
-// 現在のページを取得
-$page = Paginator::resolveCurrentPage('page');
-// ページ番号から表示するデータを指定
-$pageData = $collection->slice(($page - 1) * $perPage, $perPage);
-$options = [
-        'path' => Paginator::resolveCurrentPath(),
-        'pageName' => 'page'
-];
-$paginatedData = new LengthAwarePaginator($pageData, $collection->count(), $perPage, $page, $options);
 ?>
 <div class="mx-auto col-12" style="text-align:center;">
     <div><h3>食べすぎやろ</h3></div>
@@ -60,27 +49,41 @@ $paginatedData = new LengthAwarePaginator($pageData, $collection->count(), $perP
           </thead>
           <tbody>
               <?php
-                // foreach($merged_data as $key => $result){
-                for($i=0;$i<count($merged_data);$i++){
-                    $tmpdate = date('Y-m-d',strtotime($merged_data[$i]->tgtdate));
+                foreach($paginatedItems as $key => $result){
+                    $tmpdate = date('Y-m-d',strtotime($result->tgtdate));
                     echo '<tr>';
-                    echo '<td>' . date('Y-m-d',strtotime($merged_data[$i]->tgtdate)).'</td>';
-                    echo '<td class="text-center">'.$merged_data[$i]->sumcolorie.'</td>';
-                    echo '<td class="text-center">'.$merged_data[$i]->walking_time.'</td>';
-                    echo '<td class="text-center">'.$merged_data[$i]->walking_steps.'</td>';
-                    echo '<td class="text-center">'.$merged_data[$i]->walking_distance.'</td>';
-                    echo '<td class="text-center">'.$merged_data[$i]->confirmed_weight.'</td>';
-                    echo '<td class="text-center">'.$merged_data[$i]->confirmed_calorie.'</td>';
+                    echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).'</td>';
+                    echo '<td class="text-center">'.$result->sumcolorie.'</td>';
+                    echo '<td class="text-center">'.$result->walking_time.'</td>';
+                    echo '<td class="text-center">'.$result->walking_steps.'</td>';
+                    echo '<td class="text-center">'.$result->walking_distance.'</td>';
+                    echo '<td class="text-center">'.$result->confirmed_weight.'</td>';
+                    echo '<td class="text-center">'.$result->confirmed_calorie.'</td>';
                     echo '<td class="text-center"><a class="btn btn-primary" href='.url("/calorie/show/$tmpdate").'>詳細</a></td>';
                     echo '</tr>';
                 }
+                // for($i=0;$i<count($merged_data);$i++){
+                //     $tmpdate = date('Y-m-d',strtotime($merged_data[$i]->tgtdate));
+                //     echo '<tr>';
+                //     echo '<td>' . date('Y-m-d',strtotime($merged_data[$i]->tgtdate)).'</td>';
+                //     echo '<td class="text-center">'.$merged_data[$i]->sumcolorie.'</td>';
+                //     echo '<td class="text-center">'.$merged_data[$i]->walking_time.'</td>';
+                //     echo '<td class="text-center">'.$merged_data[$i]->walking_steps.'</td>';
+                //     echo '<td class="text-center">'.$merged_data[$i]->walking_distance.'</td>';
+                //     echo '<td class="text-center">'.$merged_data[$i]->confirmed_weight.'</td>';
+                //     echo '<td class="text-center">'.$merged_data[$i]->confirmed_calorie.'</td>';
+                //     echo '<td class="text-center"><a class="btn btn-primary" href='.url("/calorie/show/$tmpdate").'>詳細</a></td>';
+                //     echo '</tr>';
+                // }
               ?>
           </tbody>
       </table>
     </div>
     <div class="d-flex justify-content-center mt-5">
         {{-- {!! $results->links() !!} --}}
-        {{$paginatedData->appends(request()->query())->links()}}
+        {{-- {{$merged_data->appends(request()->query())->links()}} --}}
+        {{-- {{$paginatedData->appends(request()->query())->links()}} --}}
+        {{ $paginatedItems->links() }}
     </div>
 </div>
 <!-- Optional JavaScript -->

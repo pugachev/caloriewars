@@ -12,7 +12,8 @@ use App\Models\Categorie;
 use App\Exceptions\Exception;
 use Amenadiel\JpGraph\Graph\Graph;
 use Amenadiel\JpGraph\Plot\LinePlot;
-
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 
 class CalorieController extends Controller
@@ -33,8 +34,8 @@ class CalorieController extends Controller
         ->selectRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') as tgtdate ,sum(calories.tgtcalorie) as sumcolorie")
         ->where('tgtcategory','!=','106')
         ->groupByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d')")
-        ->orderByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') desc")
-        ->paginate(10);
+        ->orderByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') desc")->get();
+        // ->paginate(10);
 
         // 運動量・体重データ
         $physical_results = "";
@@ -50,6 +51,7 @@ class CalorieController extends Controller
 
         $merged_data = array();
         $tmp = array();
+        // dd(count($results));
         //運動量をマージする
         foreach($results as $result){
             // dd($result->tgtdate);
@@ -61,7 +63,7 @@ class CalorieController extends Controller
             $physical_results = DB::table('physical_data')
             ->select('tgt_physical_category',"tgt_physical_data")
             ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$result->tgtdate])
-            ->orderByRaw("physical_data.tgt_physical_category asc")->get();
+            ->orderByRaw("physical_data.tgt_physical_category asc")->paginate(10);
             if(isset($physical_results)){
                 // physicalデータを格納するための配列を用意する
                 foreach($physical_results as $key=>$val){
@@ -98,11 +100,7 @@ class CalorieController extends Controller
 
         }
 
-        // dd($merged_data);
-
-        // foreach($results as $result){
-        //     dd($result);
-        // }
+        $merged_data = collect($merged_data);
 
         // 摂取熱量カテゴリ
         $categories = DB::table('categories')
@@ -116,7 +114,27 @@ class CalorieController extends Controller
              ->orderBy('physical_cateid','asc')
              ->get();
 
-        return view('calorie.index', compact('merged_data','categories','physical_categories'));
+        // 配列からコレクションへ変換
+        $collection = collect($merged_data);
+
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+        // 1ページあたりのアイテム数
+        $perPage = 10;
+
+        // 現在のページに表示するアイテムのスライスを取得
+        $currentItems = $collection->slice(($currentPage - 1) * $perPage, $perPage)->all();
+
+        // ページネーションのインスタンスを作成
+        $paginatedItems = new LengthAwarePaginator(
+            $currentItems, // 現在のページに表示するアイテム
+            $collection->count(), // 全アイテム数
+            $perPage, // 1ページあたりのアイテム数
+            $currentPage, // 現在のページ
+            ['path' => LengthAwarePaginator::resolveCurrentPath()] // ページネーションのパス
+        );
+
+        return view('calorie.index', compact('paginatedItems','categories','physical_categories'));
     }
 
     /**
