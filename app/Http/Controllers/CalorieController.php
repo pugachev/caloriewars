@@ -14,6 +14,7 @@ use Amenadiel\JpGraph\Graph\Graph;
 use Amenadiel\JpGraph\Plot\LinePlot;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use App\Models\Physical_data;
 
 
 class CalorieController extends Controller
@@ -60,10 +61,10 @@ class CalorieController extends Controller
             $result->walking_distance = 0;
             $result->confirmed_weight = 0;
             $result->confirmed_calorie = 0;
-            $physical_results = DB::table('physical_data')
+            $physical_results = DB::table('physical_datas')
             ->select('tgt_physical_category',"tgt_physical_data")
             ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$result->tgtdate])
-            ->orderByRaw("physical_data.tgt_physical_category asc")->paginate(10);
+            ->orderByRaw("physical_datas.tgt_physical_category asc")->paginate(10);
             if(isset($physical_results)){
                 // physicalデータを格納するための配列を用意する
                 foreach($physical_results as $key=>$val){
@@ -182,8 +183,14 @@ class CalorieController extends Controller
      */
     public function store_physical_info(Request $request)
     {
-        dd($request);
-        return redirect()->to('calorie')->with('message', 'テストです');
+        $physical_data=new physical_data();
+        $physical_data->tgt_physical_date=date('Y-m-d',strtotime($request->tgtdate));
+        $physical_data->tgt_physical_category=$request->tgtcategory;
+        $physical_data->tgt_physical_item=$request->tgtitem;
+        $physical_data->tgt_physical_data=$request->tgtcalorie;
+
+        $physical_data->save();
+        return redirect()->to('calorie')->with('message', 'データを保存しました');
     }
 
     /**

@@ -129,7 +129,7 @@ foreach($physical_categories as $val){
 </script>
 </body>
 </html>
-<!-- 新規作成モーダルダイアログ -->
+<!-- 摂取熱量モーダルダイアログ -->
 <div class="modal fade" id="dataCreate" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -180,7 +180,7 @@ foreach($physical_categories as $val){
         </div>
     </div>
 </div>
-<!-- 新規作成モーダルダイアログ -->
+<!-- 運動量・体重モーダルダイアログ -->
 <div class="modal fade" id="store_physical_info" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
