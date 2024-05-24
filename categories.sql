@@ -16,7 +16,7 @@ INSERT INTO `physical_categories` (`id`, `physical_cateid`, `physical_catename`)
 (5, 204, '確定熱量');
 
 
-CREATE TABLE IF NOT EXISTS `physical_data` (
+CREATE TABLE IF NOT EXISTS `physical_datas` (
   `id` bigint(20) unsigned NOT NULL,
   `tgt_physical_date` datetime NOT NULL,
   `tgt_physical_category` int(11) NOT NULL COMMENT 'カテゴリ',
