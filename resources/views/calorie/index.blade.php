@@ -43,7 +43,7 @@ foreach($physical_categories as $val){
                   <th class="text-center">歩数</th>
                   <th class="text-center">歩行距離</th>
                   <th class="text-center">確定体重</th>
-                  <th class="text-center">確定体重</th>
+                  <th class="text-center">確定熱量</th>
                   <th class="text-center">詳細</th>
               </tr>
           </thead>

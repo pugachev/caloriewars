@@ -7,6 +7,8 @@
 <?php
     $labels = json_encode($labels);
     $weeksum = json_encode($weeksum);
+    $physical_results = json_encode($week_avg_calorie);
+    // dd($physical_results);
 
     $cate_data="";
     //戻りがオブジェクト型
@@ -74,23 +76,49 @@
         data: {
         // ※labelとデータの関係は得にありません
         labels: <?php echo $labels; ?>,
-        datasets: [{
-            label: 'カロリー週計',
-            data: <?php echo $weeksum; ?>,
-            borderColor: '#f88',
-        }],
+        datasets: [
+            {
+                label: 'カロリー週計',
+                data: <?php echo $weeksum; ?>,
+                borderColor: '#f88',
+            },
+            {
+                label: '消費熱量週計',
+                data: <?php echo $physical_results; ?>,
+                borderColor: '#6495ED',
+            }],
         },
         options: {
-        scales: {
-            // Y軸の最大値・最小値、目盛りの範囲などを設定する
-            y: {
-            suggestedMin: 5000,
-            suggestedMax: 16000,
-            ticks: {
-                stepSize: 100,
-            }
-            }
-        },
+            scales: {
+                // Y軸の最大値・最小値、目盛りの範囲などを設定する
+                // y: {
+                //     suggestedMin: 5000,
+                //     suggestedMax: 16000,
+                //     ticks: {
+                //         stepSize: 100,
+                //     }
+                // },
+                yAxes: [
+                    {
+                        id: 'y1',
+                        position: 'left',
+                        ticks: {
+                            suggestedMax: 5000,
+                            suggestedMin: 16000,
+                            stepSize: 1000,
+                        }
+                    },
+                    {
+                        id: 'y2',
+                        position: 'right',
+                        ticks: {
+                            suggestedMax: 1000,
+                            suggestedMin: 2000,
+                            stepSize: 300,
+                        }
+                    }
+                ]
+            },
         },
     };
     let lineChart = new Chart(lineCtx, lineConfig);

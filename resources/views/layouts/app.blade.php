@@ -40,7 +40,8 @@ foreach($categories as $val){
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <script src="{{ asset('js/bootstrap.min.js') }}" defer></script>
     <script src="{{ asset('js/main.js') }}" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script> --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
 <script type="text/javascript">
   $(function(){
     $('#searchcategory').change(function(){
@@ -107,7 +108,7 @@ foreach($categories as $val){
                     <a class="nav-link" href="#" data-toggle="modal" data-target="#store_physical_info">運動量・体重<span class="sr-only">(current)</span></a>
                   </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="{{route('calorie.makegraph')}}" >推移グラフ</a>
+                    <a class="nav-link" href="{{route('calorie.makegraph')}}" >摂取カロリーと消費カロリー</a>
                 </li>
                 {{-- <li class="nav-item active">
                     <a class="nav-link" href="{{route('calorie.chartgraph')}}" >チャートグラフ画面</a>
