@@ -3126,7 +3126,7 @@ INSERT INTO `physical_categories` (`id`, `physical_cateid`, `physical_catename`)
 -- テーブルの構造 `physical_data`
 --
 
-CREATE TABLE `physical_data` (
+CREATE TABLE `physical_datas` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `tgt_physical_date` datetime NOT NULL,
   `tgt_physical_category` int(11) NOT NULL COMMENT 'カテゴリ',
