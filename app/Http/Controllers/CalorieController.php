@@ -385,7 +385,7 @@ class CalorieController extends Controller
 
     /**
      * 第x週の合計折れ線グラフを作成
-     * 摂取カロリーと消費カロリー
+     * 摂取カロリーと確定体重
      */
     public function makegraph(Request $request) {
 
@@ -409,6 +409,8 @@ class CalorieController extends Controller
             array_push($weeksum,$result->weeksum);
         }
 
+        // dd($labels);
+
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
         ->selectRaw("avg(tgt_physical_data) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
@@ -429,68 +431,204 @@ class CalorieController extends Controller
             $week_avg_weight[$result->week] = $result->week_avg_weight;
         }
 
+        // dd($labels);
+
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
         ->select('cateid','catename')
         ->orderBy('cateid','asc')
         ->get();
 
-        return view('calorie.statics', compact('labels','weeksum','categories','week_avg_weight'));
+        return view('calorie.statics_cal_weight', compact('labels','weeksum','categories','week_avg_weight'));
     }
 
     /**
      * 第x週の合計折れ線グラフを作成
-     * 歩数と確定体重
+     * 歩数と歩行距離
      */
     public function makegraph2(Request $request) {
 
-        // 歩数の週単位の平均値を取得
-
-        $steps_results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_calorie,date_format(tgt_physical_date ,'%U') as week")
+        // (A) 週単位で歩数データを集める
+        $results = DB::table('physical_datas')
+        ->selectRaw("avg(tgt_physical_data) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","201")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
 
 
+        // 横軸に表示する第x週ラベル
         $labels = array();
+        // 第x週のカロリー合計値
         $weeksum = array();
-        foreach($results as $result){
-            if($result->week=="00"){
-                continue;
-            }
-            //labelの追加
-            array_push($labels,$result->week);
-            array_push($weeksum,$result->weeksum);
+        // 週単位の歩行距離を格納する配列
+        $week_avg_distance = array();
+
+        // 配列を初期化する
+        $weeks = CalorieController::weeks();
+        for($i=0;$i<$weeks;$i++){
+            $w = sprintf("%02d",($i+1));
+            $labels[$i] = $w;
+            $weeksum[$w] = 0;
+            $week_avg_distance[$w] = 0;
         }
 
 
-        $consumed = array();
 
-        // 確定体重の週単位の平均値を取得
+        // データを追加する
+        foreach($results as $result){
+            $weeksum[$result->week] = $result->week_avg_steps;
+        }
 
+
+        // (B) 週単位で歩行距離データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_calorie,date_format(tgt_physical_date ,'%U') as week")
-        ->where("tgt_physical_category","=","204")
+        ->selectRaw("avg(tgt_physical_data) as week_avg_distance,date_format(tgt_physical_date ,'%U') as week")
+        ->where("tgt_physical_category","=","202")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
 
-        $week_avg_calorie = array();
 
-        for($i=0;$i<(count($labels) - count($physical_results));$i++){
-            array_push($week_avg_calorie,0);
-        }
 
+        // 平均体重の配列に第x週を添え字にして平均体重を格納する
         foreach($physical_results as $result){
-            array_push($week_avg_calorie,$result->week_avg_calorie);
+            $week_avg_distance[$result->week] = $result->week_avg_distance;
         }
-
+        // dd($weeksum);
+        // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
         ->select('cateid','catename')
         ->orderBy('cateid','asc')
         ->get();
 
-        return view('calorie.statics', compact('labels','weeksum','categories','week_avg_calorie'));
+        // dd($labels);
+
+        return view('calorie.statics_steps_distance', compact('labels','weeksum','week_avg_distance','categories'));
+    }
+
+    /**
+     * 第x週の合計折れ線グラフを作成
+     * 歩数と歩行時間
+     */
+    public function makegraph3(Request $request) {
+
+        // (A) 週単位で歩数データを集める
+        $results = DB::table('physical_datas')
+        ->selectRaw("avg(tgt_physical_data) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
+        ->where("tgt_physical_category","=","201")
+        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+        ->groupBy("week")->get();
+
+
+        // 横軸に表示する第x週ラベル
+        $labels = array();
+        // 第x週のカロリー合計値
+        $weeksum = array();
+        // 週単位の歩行距離を格納する配列
+        $week_avg_time = array();
+
+        // 配列を初期化する
+        $weeks = CalorieController::weeks();
+        for($i=0;$i<$weeks;$i++){
+            $w = sprintf("%02d",($i+1));
+            $labels[$i] = $w;
+            $weeksum[$w] = 0;
+            $week_avg_time[$w] = 0;
+        }
+
+
+
+        // データを追加する
+        foreach($results as $result){
+            $weeksum[$result->week] = $result->week_avg_steps;
+        }
+
+
+        // (B) 週単位で歩行距離データを集める
+        $physical_results = DB::table('physical_datas')
+        ->selectRaw("avg(tgt_physical_data) as week_avg_time,date_format(tgt_physical_date ,'%U') as week")
+        ->where("tgt_physical_category","=","200")
+        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+        ->groupBy("week")->get();
+
+
+
+        // 平均体重の配列に第x週を添え字にして平均体重を格納する
+        foreach($physical_results as $result){
+            $week_avg_time[$result->week] = $result->week_avg_time;
+        }
+        // dd($weeksum);
+        // フィジカルデータ用のカテゴリを集める
+        $categories = DB::table('categories')
+        ->select('cateid','catename')
+        ->orderBy('cateid','asc')
+        ->get();
+
+        // dd($labels);
+
+        return view('calorie.statics_steps_time', compact('labels','weeksum','week_avg_time','categories'));
+    }
+
+    /**
+     * 第x週の合計折れ線グラフを作成
+     * 歩数と歩行時間
+     */
+    public function makegraph4(Request $request) {
+
+        // (A) 週単位で歩数データを集める
+        $results = DB::table('physical_datas')
+        ->selectRaw("avg(tgt_physical_data) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
+        ->where("tgt_physical_category","=","201")
+        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+        ->groupBy("week")->get();
+
+
+        // 横軸に表示する第x週ラベル
+        $labels = array();
+        // 第x週のカロリー合計値
+        $weeksum = array();
+        // 週単位の歩行距離を格納する配列
+        $week_avg_weight = array();
+
+        // 配列を初期化する
+        $weeks = CalorieController::weeks();
+        for($i=0;$i<$weeks;$i++){
+            $w = sprintf("%02d",($i+1));
+            $labels[$i] = $w;
+            $weeksum[$w] = 0;
+            $week_avg_weight[$w] = 0;
+        }
+
+
+
+        // データを追加する
+        foreach($results as $result){
+            $weeksum[$result->week] = $result->week_avg_steps;
+        }
+
+
+        // (B) 週単位で確定体重データを集める
+        $physical_results = DB::table('physical_datas')
+        ->selectRaw("avg(tgt_physical_data) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
+        ->where("tgt_physical_category","=","203")
+        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+        ->groupBy("week")->get();
+
+
+
+        // 平均体重の配列に第x週を添え字にして平均体重を格納する
+        foreach($physical_results as $result){
+            $week_avg_weight[$result->week] = $result->week_avg_weight;
+        }
+        // dd($weeksum);
+        // フィジカルデータ用のカテゴリを集める
+        $categories = DB::table('categories')
+        ->select('cateid','catename')
+        ->orderBy('cateid','asc')
+        ->get();
+
+        // dd($labels);
+
+        return view('calorie.statics_steps_weight', compact('labels','weeksum','week_avg_weight','categories'));
     }
 
     /**
@@ -566,5 +704,25 @@ class CalorieController extends Controller
         }catch(Exception $ex){
           error_log($ex->getMessage());
         }
+    }
+
+
+    // 現在が第x週かを調べる
+    public static function weeks () {
+        $today = time();
+        $start = mktime(0, 0, 0, 1, 1, date('Y'));
+        while (date('w', $start) != 0) {
+            // 日曜日になるまで1日ずつ移動させる
+            // 24(時間) * 60(分) * 60(秒)
+            $start += 24 * 60 * 60;
+        }
+        // 今日までの週を計算していく
+        $weeks = 0;
+        while ($start < $today) {
+            // 週ずつかけていく。
+            $start += 7 * 24 * 60 * 60;
+            $weeks++;
+        }
+        return $weeks;
     }
 }

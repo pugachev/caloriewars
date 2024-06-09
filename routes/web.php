@@ -17,6 +17,9 @@ Route::get('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])
 Route::post('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::get('/calorie/show/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'show'])->name('calorie.show');
 Route::get('/calorie/makegraph}', [App\Http\Controllers\CalorieController::class, 'makegraph'])->name('calorie.makegraph');
+Route::get('/calorie/makegraph2}', [App\Http\Controllers\CalorieController::class, 'makegraph2'])->name('calorie.makegraph2');
+Route::get('/calorie/makegraph3}', [App\Http\Controllers\CalorieController::class, 'makegraph3'])->name('calorie.makegraph3');
+Route::get('/calorie/makegraph4}', [App\Http\Controllers\CalorieController::class, 'makegraph4'])->name('calorie.makegraph4');
 Route::get('/calorie/chartgraph', [App\Http\Controllers\CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
 Route::post('/calorie/chartgraph', [App\Http\Controllers\CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
 Route::post('/calorie/store', [App\Http\Controllers\CalorieController::class, 'store'])->name('calorie.store');

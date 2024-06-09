@@ -113,15 +113,9 @@ foreach($categories as $val){
                     </a>
                     <ul class="dropdown-menu">
                       <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >摂取カロリーと確定体重</a></li>
-                    </ul>
-                    <ul class="dropdown-menu">
-                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >歩数と歩行距離</a></li>
-                    </ul>
-                    <ul class="dropdown-menu">
-                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >歩数と歩行時間</a></li>
-                    </ul>
-                    <ul class="dropdown-menu">
-                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >歩数と確定体重</a></li>
+                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph2')}}" >歩数と歩行距離</a></li>
+                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph3')}}" >歩数と歩行時間</a></li>
+                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph4')}}" >歩数と確定体重</a></li>
                     </ul>
                 </li>
                 {{-- <li class="nav-item active">
