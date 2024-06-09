@@ -41,7 +41,7 @@ foreach($categories as $val){
     <script src="{{ asset('js/bootstrap.min.js') }}" defer></script>
     <script src="{{ asset('js/main.js') }}" defer></script>
     {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script> --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.4.1/chart.js"></script>
 <script type="text/javascript">
   $(function(){
     $('#searchcategory').change(function(){
@@ -107,8 +107,22 @@ foreach($categories as $val){
                 <li class="nav-item active">
                     <a class="nav-link" href="#" data-toggle="modal" data-target="#store_physical_info">運動量・体重<span class="sr-only">(current)</span></a>
                   </li>
-                <li class="nav-item active">
-                    <a class="nav-link" href="{{route('calorie.makegraph')}}" >摂取カロリーと消費カロリー</a>
+                <li class="nav-item dropdown active" style="width: 350px;">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      グラフ種類
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >摂取カロリーと確定体重</a></li>
+                    </ul>
+                    <ul class="dropdown-menu">
+                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >歩数と歩行距離</a></li>
+                    </ul>
+                    <ul class="dropdown-menu">
+                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >歩数と歩行時間</a></li>
+                    </ul>
+                    <ul class="dropdown-menu">
+                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >歩数と確定体重</a></li>
+                    </ul>
                 </li>
                 {{-- <li class="nav-item active">
                     <a class="nav-link" href="{{route('calorie.chartgraph')}}" >チャートグラフ画面</a>
