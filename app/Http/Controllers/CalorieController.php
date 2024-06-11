@@ -431,7 +431,7 @@ class CalorieController extends Controller
             $week_avg_weight[$result->week] = $result->week_avg_weight;
         }
 
-        // dd($labels);
+        // dd($week_avg_weight);
 
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
@@ -468,8 +468,8 @@ class CalorieController extends Controller
         for($i=0;$i<$weeks;$i++){
             $w = sprintf("%02d",($i+1));
             $labels[$i] = $w;
-            $weeksum[$w] = 0;
-            $week_avg_distance[$w] = 0;
+            $weeksum[$i] = 0;
+            $week_avg_distance[$i] = 0;
         }
 
 
@@ -500,7 +500,7 @@ class CalorieController extends Controller
         ->orderBy('cateid','asc')
         ->get();
 
-        // dd($labels);
+        // dd($week_avg_distance);
 
         return view('calorie.statics_steps_distance', compact('labels','weeksum','week_avg_distance','categories'));
     }
@@ -531,8 +531,8 @@ class CalorieController extends Controller
         for($i=0;$i<$weeks;$i++){
             $w = sprintf("%02d",($i+1));
             $labels[$i] = $w;
-            $weeksum[$w] = 0;
-            $week_avg_time[$w] = 0;
+            $weeksum[$i] = 0;
+            $week_avg_time[$i] = 0;
         }
 
 
@@ -594,8 +594,8 @@ class CalorieController extends Controller
         for($i=0;$i<$weeks;$i++){
             $w = sprintf("%02d",($i+1));
             $labels[$i] = $w;
-            $weeksum[$w] = 0;
-            $week_avg_weight[$w] = 0;
+            $weeksum[$i] = 0;
+            $week_avg_weight[$i] = 0;
         }
 
 
