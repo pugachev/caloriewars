@@ -414,7 +414,7 @@ class CalorieController extends Controller
 
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
+        ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","203")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
@@ -451,7 +451,7 @@ class CalorieController extends Controller
 
         // (A) 週単位で歩数データを集める
         $results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
+        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","201")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
@@ -483,7 +483,7 @@ class CalorieController extends Controller
 
         // (B) 週単位で歩行距離データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_distance,date_format(tgt_physical_date ,'%U') as week")
+        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_distance,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","202")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
@@ -514,7 +514,7 @@ class CalorieController extends Controller
 
         // (A) 週単位で歩数データを集める
         $results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
+        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","201")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
@@ -546,7 +546,7 @@ class CalorieController extends Controller
 
         // (B) 週単位で歩行距離データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_time,date_format(tgt_physical_date ,'%U') as week")
+        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_time,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","200")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
@@ -577,7 +577,7 @@ class CalorieController extends Controller
 
         // (A) 週単位で歩数データを集める
         $results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
+        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","201")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
@@ -609,7 +609,7 @@ class CalorieController extends Controller
 
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("avg(tgt_physical_data) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
+        ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","203")
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
