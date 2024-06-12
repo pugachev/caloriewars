@@ -16,6 +16,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use App\Models\Physical_data;
 use Illuminate\Support\Facades\Log;
+use DateTime;
 
 
 class CalorieController extends Controller
@@ -43,19 +44,11 @@ class CalorieController extends Controller
         // 運動量・体重データ
         $physical_results = "";
 
-
-        // dd($physical_results);
-        // $results_consump = DB::table('calories')
-        // ->select('calories.tgtdate as tgtdate', DB::raw("sum(calories.tgtcalorie) as sumcolorie"))
-        // ->where('tgtcategory','106')
-        // ->groupBy('calories.tgtdate')
-        // ->orderBy('calories.tgtdate','desc')
-        // ->paginate(10);
-
         $merged_data = array();
         //運動量をマージする
         foreach($results as $result){
             // dd($result->tgtdate);
+            $result->weeknum = CalorieController::getWeekOfYear($result->tgtdate);
             $result->walking_time = 0;
             $result->walking_steps = 0;
             $result->walking_distance = 0;
@@ -103,7 +96,7 @@ class CalorieController extends Controller
             $merged_data[] = $result;
 
         }
-        // dd($merged_data);
+
         $merged_data = collect($merged_data);
 
 
@@ -345,15 +338,6 @@ class CalorieController extends Controller
         //運動量の合計をあつめる
         $query->where('tgtcategory','106');
 
-        // //検索ワードの存在チェック
-        // if(isset($request->searchword) && !empty($request->searchword)){
-        //     $query->where('tgtitem',$request->searchword);
-        // }
-
-        // //カテゴリの存在チェック
-        // if(isset($request->searchcategory) && !empty($request->searchcategory)){
-        //     $query->where('tgtcategory',$request->searchcategory);
-        // }
 
         //日付の存在チェック
         //開始日と終了日の両方が存在する場合
@@ -488,8 +472,6 @@ class CalorieController extends Controller
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
 
-
-
         // 平均体重の配列に第x週を添え字にして平均体重を格納する
         foreach($physical_results as $result){
             $week_avg_distance[$result->week] = $result->week_avg_distance;
@@ -536,13 +518,10 @@ class CalorieController extends Controller
             $week_avg_time[$i] = 0;
         }
 
-
-
         // データを追加する
         foreach($results as $result){
             $weeksum[$result->week] = $result->week_avg_steps;
         }
-
 
         // (B) 週単位で歩行距離データを集める
         $physical_results = DB::table('physical_datas')
@@ -557,14 +536,13 @@ class CalorieController extends Controller
         foreach($physical_results as $result){
             $week_avg_time[$result->week] = $result->week_avg_time;
         }
-        // dd($weeksum);
+
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
         ->select('cateid','catename')
         ->orderBy('cateid','asc')
         ->get();
 
-        // dd($labels);
 
         return view('calorie.statics_steps_time', compact('labels','weeksum','week_avg_time','categories'));
     }
@@ -599,13 +577,10 @@ class CalorieController extends Controller
             $week_avg_weight[$i] = 0;
         }
 
-
-
         // データを追加する
         foreach($results as $result){
             $weeksum[$result->week] = $result->week_avg_steps;
         }
-
 
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
@@ -614,20 +589,17 @@ class CalorieController extends Controller
         ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
 
-
-
         // 平均体重の配列に第x週を添え字にして平均体重を格納する
         foreach($physical_results as $result){
             $week_avg_weight[$result->week] = $result->week_avg_weight;
         }
-        // dd($week_avg_weight);
+
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
         ->select('cateid','catename')
         ->orderBy('cateid','asc')
         ->get();
 
-        // dd($labels);
 
         return view('calorie.statics_steps_weight', compact('labels','weeksum','week_avg_weight','categories'));
     }
@@ -725,5 +697,27 @@ class CalorieController extends Controller
             $weeks++;
         }
         return $weeks;
+    }
+
+    /**
+     * 特定の日付が第x週かを調べる
+     */
+    function getWeekOfYear($date) {
+        // DateTimeオブジェクトを作成
+        $dateTime = new DateTime($date);
+
+        // 年の始まりを取得
+        $yearStart = new DateTime($dateTime->format('Y') . '-01-01');
+
+        // 日曜日を1週の始まりとするため、週番号の計算においてサンデースタートを設定
+        $weekNumber = (int)$dateTime->format('W');
+        $dayOfWeek = (int)$dateTime->format('w'); // 日曜日が0
+
+        // 1月1日が日曜日でない場合、1週目の調整
+        if ($dayOfWeek != 0) {
+            $weekNumber--;
+        }
+
+        return $weekNumber;
     }
 }

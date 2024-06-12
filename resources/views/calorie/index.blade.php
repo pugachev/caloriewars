@@ -37,6 +37,7 @@ foreach($physical_categories as $val){
       <table class="table table-striped" id="mytable">
           <thead>
               <tr>
+                  <th class="text-center">週番号</th>
                   <th class="text-center">日付</th>
                   <th class="text-center">摂取熱量合計</th>
                   <th class="text-center">歩行時間</th>
@@ -52,6 +53,7 @@ foreach($physical_categories as $val){
                 foreach($paginatedItems as $key => $result){
                     $tmpdate = date('Y-m-d',strtotime($result->tgtdate));
                     echo '<tr>';
+                    echo '<td>' . $result->weeknum.'</td>';
                     echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).'</td>';
                     echo '<td class="text-center">'.$result->sumcolorie.'</td>';
                     echo '<td class="text-center">'.$result->walking_time.'</td>';
