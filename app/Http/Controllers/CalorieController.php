@@ -233,6 +233,30 @@ class CalorieController extends Controller
     }
 
     /**
+     * 特定日付の運動量・消費カロリーを集める
+     */
+    public function showphysical($tgtdate)
+    {
+        $results = DB::table('physical_datas')
+            ->select('physical_categories.physical_cateid as physical_cateid','tgt_physical_date','physical_categories.physical_catename as physical_catename','tgt_physical_item','tgt_physical_data','physical_datas.id','tgt_physical_category')
+            ->leftJoin('physical_categories','physical_categories.physical_cateid','=','physical_datas.tgt_physical_category')
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$tgtdate])
+            ->orderByRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y-%m-%d') asc")->get();
+        // dd($results->toSql());
+            // ->paginate(10);
+
+        // 運動量・体重カテゴリ
+        $physical_categories = DB::table('physical_categories')
+             ->select('physical_cateid','physical_catename')
+             ->orderBy('physical_cateid','asc')
+             ->get();
+
+        // dd($results);
+
+        return view('calorie.detail_physical', compact('results','physical_categories','tgtdate'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
@@ -274,12 +298,31 @@ class CalorieController extends Controller
         return redirect()->route('calorie.show', ['tgtdate' => $tmpdate])->with('message', 'データを更新しました');
     }
 
+    public function updatephysical(Request $request)
+    {
+        $physical_data= Physical_data::find($request->updateId);
+        $physical_data->tgt_physical_date=$request->utgt_physical_date;
+        $physical_data->tgt_physical_category=$request->utgt_physical_category;
+        $physical_data->tgt_physical_data=$request->utgt_physical_data;
+        $physical_data->save();
+
+        return redirect()->route('calorie.showphysical', ['tgtdate' => $request->utgt_physical_date])->with('message', 'データを更新しました');
+    }
+
     /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    public function destroyphysical(Request $request)
+    {
+        $physical_data= Physical_data::find($request->deleteId);
+        $tmpdate = $physical_data->tgt_physical_date;
+        $physical_data->delete();
+        return redirect()->route('calorie.showphysical', ['tgtdate' => $tmpdate])->with('message', 'データを更新しました');
+    }
+
     public function destroy(Request $request)
     {
         $calorie= Calorie::find($request->deleteId);

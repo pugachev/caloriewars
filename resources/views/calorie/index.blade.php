@@ -45,7 +45,8 @@ foreach($physical_categories as $val){
                   <th class="text-center">歩行距離</th>
                   <th class="text-center">確定体重</th>
                   <th class="text-center">確定熱量</th>
-                  <th class="text-center">詳細</th>
+                  <th class="text-center">熱量詳細</th>
+                  <th class="text-center">運動詳細</th>
               </tr>
           </thead>
           <tbody>
@@ -61,7 +62,8 @@ foreach($physical_categories as $val){
                     echo '<td class="text-center">'.$result->walking_distance.'</td>';
                     echo '<td class="text-center">'.$result->confirmed_weight.'</td>';
                     echo '<td class="text-center">'.$result->confirmed_calorie.'</td>';
-                    echo '<td class="text-center"><a class="btn btn-primary" href='.url("/calorie/show/$tmpdate").'>詳細</a></td>';
+                    echo '<td class="text-center"><a class="btn btn-primary" href='.url("/calorie/show/$tmpdate").'>熱量詳細</a></td>';
+                    echo '<td class="text-center"><a class="btn btn-success" href='.url("/calorie/showphysical/$tmpdate").'>運動詳細</a></td>';
                     echo '</tr>';
                 }
                 // for($i=0;$i<count($merged_data);$i++){
