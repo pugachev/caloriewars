@@ -55,7 +55,14 @@ foreach($physical_categories as $val){
                     $tmpdate = date('Y-m-d',strtotime($result->tgtdate));
                     echo '<tr>';
                     echo '<td>' . $result->weeknum.'</td>';
-                    echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).'</td>';
+                    if($result->weekday=="日"){
+                        echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).' <span style="color:red;font-weight:bold;"> ('.$result->weekday.') </span>'.'</td>';
+                    }else if($result->weekday=="土"){
+                        echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).' <span style="color:blue;font-weight:bold;"> ('.$result->weekday.') </span>'.'</td>';
+                    }else{
+                        echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).' <span> ('.$result->weekday.') </span>'.'</td>';
+                    }
+
                     echo '<td class="text-center">'.$result->sumcolorie.'</td>';
                     echo '<td class="text-center">'.$result->walking_time.'</td>';
                     echo '<td class="text-center">'.$result->walking_steps.'</td>';

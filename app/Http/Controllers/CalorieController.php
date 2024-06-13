@@ -49,6 +49,9 @@ class CalorieController extends Controller
         foreach($results as $result){
             // dd($result->tgtdate);
             $result->weeknum = CalorieController::getWeekOfYear($result->tgtdate);
+            $week = array( "日", "月", "火", "水", "木", "金", "土" );
+            $datetime = new DateTime($result->tgtdate);
+            $result->weekday = $week[$datetime->format("w")];
             $result->walking_time = 0;
             $result->walking_steps = 0;
             $result->walking_distance = 0;
