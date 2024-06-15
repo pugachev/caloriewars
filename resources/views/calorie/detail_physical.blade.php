@@ -51,7 +51,7 @@ foreach($physical_categories as $val){
                     echo '</button>';
                     echo '</td>';
                     echo '<td class="text-center">';
-                    echo '<button type="button" class="btn btn-danger" data-toggle="modal" onclick="row_deletedata(this)" data-id="'.$result->id.'"data-target="#dataUpdate" data-tgt_physical_date="'.date('Y-m-d',strtotime($result->tgt_physical_date)).'" data-tgt_physical_item="'.$result->tgt_physical_item .'" data-tgt_physical_data="'.$result->tgt_physical_data.'">';
+                    echo '<button type="button" class="btn btn-danger" data-toggle="modal" onclick="row_deletedata(this)" data-id="'.$result->id.'"data-target="#dataDelete" data-tgt_physical_date="'.date('Y-m-d',strtotime($result->tgt_physical_date)).'" data-tgt_physical_item="'.$result->tgt_physical_item .'" data-tgt_physical_data="'.$result->tgt_physical_data.'">';
                     echo '削除';
                     echo '</button>';
                     echo '</td>';
@@ -255,7 +255,7 @@ foreach($physical_categories as $val){
                         </div>
                         <div class="modal-footer d-flex justify-content-center">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
-                            <button type="submit" class="btn btn-primary">削除</button>
+                            <button type="submit" class="btn btn-danger">削除</button>
                         </div>
                     </div>
                 </div>

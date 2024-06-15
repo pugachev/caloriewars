@@ -245,16 +245,12 @@ class CalorieController extends Controller
             ->leftJoin('physical_categories','physical_categories.physical_cateid','=','physical_datas.tgt_physical_category')
             ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y-%m-%d') = :tgtday",['tgtday'=>$tgtdate])
             ->orderByRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y-%m-%d') asc")->get();
-        // dd($results->toSql());
-            // ->paginate(10);
 
         // 運動量・体重カテゴリ
         $physical_categories = DB::table('physical_categories')
              ->select('physical_cateid','physical_catename')
              ->orderBy('physical_cateid','asc')
              ->get();
-
-        // dd($results);
 
         return view('calorie.detail_physical', compact('results','physical_categories','tgtdate'));
     }
@@ -321,7 +317,7 @@ class CalorieController extends Controller
     public function destroyphysical(Request $request)
     {
         $physical_data= Physical_data::find($request->deleteId);
-        $tmpdate = $physical_data->tgt_physical_date;
+        $tmpdate = $request->dtgt_physical_date;
         $physical_data->delete();
         return redirect()->route('calorie.showphysical', ['tgtdate' => $tmpdate])->with('message', 'データを更新しました');
     }
@@ -409,8 +405,6 @@ class CalorieController extends Controller
 
         $results = $query->paginate(10);
 
-        // dd(preg_replace_array('/\?/', $query->getBindings(), $query->toSql()));
-
         return $results;
     }
 
@@ -440,7 +434,6 @@ class CalorieController extends Controller
             array_push($weeksum,$result->weeksum);
         }
 
-        // dd($results);
 
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
@@ -462,7 +455,6 @@ class CalorieController extends Controller
             $week_avg_weight[$result->week] = $result->week_avg_weight;
         }
 
-        // dd($week_avg_weight);
 
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
@@ -503,14 +495,10 @@ class CalorieController extends Controller
             $week_avg_distance[$i] = 0;
         }
 
-
-
         // データを追加する
         foreach($results as $result){
             $weeksum[$result->week] = $result->week_avg_steps;
         }
-
-
         // (B) 週単位で歩行距離データを集める
         $physical_results = DB::table('physical_datas')
         ->selectRaw("round(avg(tgt_physical_data)) as week_avg_distance,date_format(tgt_physical_date ,'%U') as week")
