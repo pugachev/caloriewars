@@ -325,7 +325,7 @@ class CalorieController extends Controller
     public function destroy(Request $request)
     {
         $calorie= Calorie::find($request->deleteId);
-        $tmpdate = $calorie->tgtdate;
+        $tmpdate = date("Y-m-d", strtotime($calorie->tgtdate));
         $calorie->delete();
         return redirect()->route('calorie.show', ['tgtdate' => $tmpdate])->with('message', 'データを更新しました');
     }
