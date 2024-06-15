@@ -16,7 +16,7 @@ foreach($physical_categories as $val){
 ?>
 
 <div class="mx-auto col-12" style="text-align:center;">
-    <div><h3>食べすぎやろ</h3></div>
+    <div><h3>運動量・体重</h3></div>
     <div><h4><?php echo $tgtdate; ?></h4></div>
     <div class="d-flex flex-row bd-highlight justify-content-center">
 
