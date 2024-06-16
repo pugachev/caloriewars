@@ -17,7 +17,18 @@ foreach($physical_categories as $val){
 
 <div class="mx-auto col-12" style="text-align:center;">
     <div><h3>運動量・体重</h3></div>
-    <div><h4><?php echo $tgtdate; ?></h4></div>
+    <div><h4>
+        <?php echo $tgtdate; ?>
+        <?php
+            if($weekday=="日"){
+                echo ' <span style="color:red;font-weight:bold;"> ('.$weekday.') </span>';
+            }else if($weekday=="土"){
+                echo ' <span style="color:blue;font-weight:bold;"> ('.$weekday.') </span>';
+            }else{
+                echo ' <span> ('.$weekday.') </span>';
+            }
+        ?>
+    </h4></div>
     <div class="d-flex flex-row bd-highlight justify-content-center">
 
     </div>

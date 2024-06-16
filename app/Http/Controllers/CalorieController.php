@@ -232,7 +232,12 @@ class CalorieController extends Controller
             ->groupBy('calories.tgtdate')
             ->value('totalcaloriesum');
 
-        return view('calorie.detail', compact('results','categories','tgtdate','totalcaloriesum','totalconsumptionsum'));
+
+            $week = array( "日", "月", "火", "水", "木", "金", "土" );
+            $datetime = new DateTime($tgtdate);
+            $weekday = $week[$datetime->format("w")];
+
+        return view('calorie.detail', compact('results','categories','tgtdate','totalcaloriesum','totalconsumptionsum','weekday'));
     }
 
     /**
@@ -252,7 +257,11 @@ class CalorieController extends Controller
              ->orderBy('physical_cateid','asc')
              ->get();
 
-        return view('calorie.detail_physical', compact('results','physical_categories','tgtdate'));
+        $week = array( "日", "月", "火", "水", "木", "金", "土" );
+        $datetime = new DateTime($tgtdate);
+        $weekday = $week[$datetime->format("w")];
+
+        return view('calorie.detail_physical', compact('results','physical_categories','tgtdate','weekday'));
     }
 
     /**
