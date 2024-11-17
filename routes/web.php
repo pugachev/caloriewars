@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::get('/', function () {
+    return redirect('/calorie');
+});
 Route::get('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::post('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::get('/calorie/show/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'show'])->name('calorie.show');
