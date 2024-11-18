@@ -12,7 +12,8 @@
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
-        "nesbot/carbon": "*"
+        "nesbot/carbon": "*",
+        "ramsey/uuid": "^4.7"
     },
     "require-dev": {
         "facade/ignition": "^2.5",

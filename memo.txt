@@ -47,3 +47,7 @@ https://menta.sutaruhin.com/?p=3061
 
 
 select sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week from calories where `tgtcategory`not in (106) and DATE_FORMAT(tgtdate,'%Y')='2023' group by week;
+
+
+
+docker exec -i caloriewars-db mysql -u mtake -pManabu2010 caloriewars < ./ikefuku40_caloriewars.sql
