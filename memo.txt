@@ -51,3 +51,7 @@ select sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week from calor
 
 
 docker exec -i caloriewars-db mysql -u mtake -pManabu2010 caloriewars < ./ikefuku40_caloriewars.sql
+
+
+git config --global user.name "pugachev"
+git config --global user.email "pugachev2011@gmail.com"
