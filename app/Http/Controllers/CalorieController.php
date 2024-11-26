@@ -422,56 +422,51 @@ class CalorieController extends Controller
      * 摂取カロリーと確定体重
      */
     public function makegraph(Request $request) {
-
+    
         // (A) 週単位でカロリー接収データを集める
         $results = DB::table('calories')
-        ->selectRaw("sum(tgtcalorie) as weeksum,date_format(tgtdate ,'%U') as week")
-        ->where('tgtcategory','!=','106')
-        ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [date('Y')])
-        ->groupBy("week")->get();
-
+            ->selectRaw("sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week")
+            ->where('tgtcategory', '!=', '106')
+            ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [date('Y')])
+            ->groupBy("week")->get();
+    
         // 横軸に表示する第x週ラベル
         $labels = array();
         // 第x週のカロリー合計値
         $weeksum = array();
         foreach($results as $result){
-            // if($result->week=="00"){
-            //     continue;
-            // }
-            //labelの追加
-            array_push($labels,$result->week);
-            array_push($weeksum,$result->weeksum);
+            // labelの追加
+            array_push($labels, $result->week);
+            array_push($weeksum, $result->weeksum);
         }
-
-
+    
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
         ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
         ->where("tgt_physical_category","=","203")
-        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
         ->groupBy("week")->get();
-
+    
         // 週単位の平均体重を格納する配列
         $week_avg_weight = array();
-
+    
         // カロリーの週単位の配列を利用して平均確定配列を0で初期化
-        for($i=0;$i<count($labels);$i++){
+        for($i = 0; $i < count($labels); $i++){
             $week_avg_weight[$i] = 0;
         }
-
+    
         // 平均体重の配列に第x週を添え字にして平均体重を格納する
         foreach($physical_results as $result){
             $week_avg_weight[$result->week] = $result->week_avg_weight;
         }
-
-
+    
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
-        ->select('cateid','catename')
-        ->orderBy('cateid','asc')
-        ->get();
-
-        return view('calorie.statics_cal_weight', compact('labels','weeksum','categories','week_avg_weight'));
+            ->select('cateid', 'catename')
+            ->orderBy('cateid', 'asc')
+            ->get();
+    
+        return view('calorie.statics_cal_weight', compact('labels', 'weeksum', 'categories', 'week_avg_weight'));
     }
 
     /**
@@ -487,10 +482,13 @@ class CalorieController extends Controller
             ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
             ->get()
             ->groupBy('week')
-            ->map(function ($weekData) {
+            ->map(function ($weekData, $week) {
                 $weekData = $weekData->pluck('tgt_physical_data')->toArray();
                 $weekData = array_pad($weekData, 7, 0); // 7個に満たない場合は0で補完
-                return round(array_sum($weekData) / 7); // 7個の平均を計算
+                return (object)[
+                    'week' => $week,
+                    'week_avg_steps' => round(array_sum($weekData) / 7, 0) // 7個の平均を計算
+                ];
             });
     
         // 横軸に表示する第x週ラベル
@@ -510,16 +508,25 @@ class CalorieController extends Controller
         }
     
         // データを追加する
-        foreach($results as $week => $averageSteps){
-            $weeksum[$week] = $averageSteps;
+        foreach($results as $result){
+            $weeksum[$result->week] = $result->week_avg_steps;
         }
     
         // (B) 週単位で歩行距離データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_distance,date_format(tgt_physical_date ,'%U') as week")
-        ->where("tgt_physical_category","=","202")
-        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
-        ->groupBy("week")->get();
+            ->selectRaw("date_format(tgt_physical_date ,'%Y-%m-%d') as date, date_format(tgt_physical_date ,'%U') as week, tgt_physical_data")
+            ->where("tgt_physical_category", "=", "202")
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+            ->get()
+            ->groupBy('week')
+            ->map(function ($weekData, $week) {
+                $weekData = $weekData->pluck('tgt_physical_data')->toArray();
+                $weekData = array_pad($weekData, 7, 0); // 7個に満たない場合は0で補完
+                return (object)[
+                    'week' => $week,
+                    'week_avg_distance' => round(array_sum($weekData) / 7, 2) // 7個の平均を計算
+                ];
+            });
     
         // 平均体重の配列に第x週を添え字にして平均体重を格納する
         foreach($physical_results as $result){
@@ -528,10 +535,10 @@ class CalorieController extends Controller
     
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
-        ->select('cateid','catename')
-        ->orderBy('cateid','asc')
-        ->get();
-
+            ->select('cateid','catename')
+            ->orderBy('cateid','asc')
+            ->get();
+    
         return view('calorie.statics_steps_distance', compact('labels','weeksum','week_avg_distance','categories'));
     }
 
@@ -540,22 +547,30 @@ class CalorieController extends Controller
      * 歩数と歩行時間
      */
     public function makegraph3(Request $request) {
-
+    
         // (A) 週単位で歩数データを集める
         $results = DB::table('physical_datas')
-        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
-        ->where("tgt_physical_category","=","201")
-        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
-        ->groupBy("week")->get();
-
-
+            ->selectRaw("date_format(tgt_physical_date ,'%Y-%m-%d') as date, date_format(tgt_physical_date ,'%U') as week, tgt_physical_data")
+            ->where("tgt_physical_category", "=", "201")
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+            ->get()
+            ->groupBy('week')
+            ->map(function ($weekData, $week) {
+                $weekData = $weekData->pluck('tgt_physical_data')->toArray();
+                $weekData = array_pad($weekData, 7, 0); // 7個に満たない場合は0で補完
+                return (object)[
+                    'week' => $week,
+                    'week_avg_steps' => round(array_sum($weekData) / 7, 0) // 7個の平均を計算
+                ];
+            });
+    
         // 横軸に表示する第x週ラベル
         $labels = array();
         // 第x週のカロリー合計値
         $weeksum = array();
         // 週単位の歩行距離を格納する配列
         $week_avg_time = array();
-
+    
         // 配列を初期化する
         $weeks = CalorieController::weeks();
         for($i=0;$i<=$weeks;$i++){
@@ -564,33 +579,39 @@ class CalorieController extends Controller
             $weeksum[$i] = 0;
             $week_avg_time[$i] = 0;
         }
-
+    
         // データを追加する
         foreach($results as $result){
             $weeksum[$result->week] = $result->week_avg_steps;
         }
-
+    
         // (B) 週単位で歩行距離データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_time,date_format(tgt_physical_date ,'%U') as week")
-        ->where("tgt_physical_category","=","200")
-        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
-        ->groupBy("week")->get();
-
-        // dd($physical_results);
-
+            ->selectRaw("date_format(tgt_physical_date ,'%Y-%m-%d') as date, date_format(tgt_physical_date ,'%U') as week, tgt_physical_data")
+            ->where("tgt_physical_category", "=", "200")
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+            ->get()
+            ->groupBy('week')
+            ->map(function ($weekData, $week) {
+                $weekData = $weekData->pluck('tgt_physical_data')->toArray();
+                $weekData = array_pad($weekData, 7, 0); // 7個に満たない場合は0で補完
+                return (object)[
+                    'week' => $week,
+                    'week_avg_time' => round(array_sum($weekData) / 7, 2) // 7個の平均を計算
+                ];
+            });
+    
         // 平均体重の配列に第x週を添え字にして平均体重を格納する
         foreach($physical_results as $result){
             $week_avg_time[$result->week] = $result->week_avg_time;
         }
-
+    
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
-        ->select('cateid','catename')
-        ->orderBy('cateid','asc')
-        ->get();
-
-
+            ->select('cateid','catename')
+            ->orderBy('cateid','asc')
+            ->get();
+    
         return view('calorie.statics_steps_time', compact('labels','weeksum','week_avg_time','categories'));
     }
 
@@ -599,22 +620,30 @@ class CalorieController extends Controller
      * 歩数と確定体重
      */
     public function makegraph4(Request $request) {
-
+    
         // (A) 週単位で歩数データを集める
         $results = DB::table('physical_datas')
-        ->selectRaw("round(avg(tgt_physical_data)) as week_avg_steps,date_format(tgt_physical_date ,'%U') as week")
-        ->where("tgt_physical_category","=","201")
-        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
-        ->groupBy("week")->get();
-
-
+            ->selectRaw("date_format(tgt_physical_date ,'%Y-%m-%d') as date, date_format(tgt_physical_date ,'%U') as week, tgt_physical_data")
+            ->where("tgt_physical_category", "=", "201")
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+            ->get()
+            ->groupBy('week')
+            ->map(function ($weekData, $week) {
+                $weekData = $weekData->pluck('tgt_physical_data')->toArray();
+                $weekData = array_pad($weekData, 7, 0); // 7個に満たない場合は0で補完
+                return (object)[
+                    'week' => $week,
+                    'week_avg_steps' => round(array_sum($weekData) / 7, 0) // 7個の平均を計算
+                ];
+            });
+    
         // 横軸に表示する第x週ラベル
         $labels = array();
         // 第x週のカロリー合計値
         $weeksum = array();
         // 週単位の歩行距離を格納する配列
         $week_avg_weight = array();
-
+    
         // 配列を初期化する
         $weeks = CalorieController::weeks();
         for($i=0;$i<=$weeks;$i++){
@@ -623,31 +652,39 @@ class CalorieController extends Controller
             $weeksum[$i] = 0;
             $week_avg_weight[$i] = 0;
         }
-
+    
         // データを追加する
         foreach($results as $result){
             $weeksum[$result->week] = $result->week_avg_steps;
         }
-
+    
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
-        ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
-        ->where("tgt_physical_category","=","203")
-        ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
-        ->groupBy("week")->get();
-
+            ->selectRaw("date_format(tgt_physical_date ,'%Y-%m-%d') as date, date_format(tgt_physical_date ,'%U') as week, tgt_physical_data")
+            ->where("tgt_physical_category", "=", "203")
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
+            ->get()
+            ->groupBy('week')
+            ->map(function ($weekData, $week) {
+                $weekData = $weekData->pluck('tgt_physical_data')->toArray();
+                $weekData = array_pad($weekData, 7, 0); // 7個に満たない場合は0で補完
+                return (object)[
+                    'week' => $week,
+                    'week_avg_weight' => round(array_sum($weekData) / 7, 2) // 7個の平均を計算
+                ];
+            });
+    
         // 平均体重の配列に第x週を添え字にして平均体重を格納する
         foreach($physical_results as $result){
             $week_avg_weight[$result->week] = $result->week_avg_weight;
         }
-
+    
         // フィジカルデータ用のカテゴリを集める
         $categories = DB::table('categories')
-        ->select('cateid','catename')
-        ->orderBy('cateid','asc')
-        ->get();
-
-
+            ->select('cateid','catename')
+            ->orderBy('cateid','asc')
+            ->get();
+    
         return view('calorie.statics_steps_weight', compact('labels','weeksum','week_avg_weight','categories'));
     }
 
