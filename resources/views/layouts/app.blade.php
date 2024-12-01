@@ -106,8 +106,16 @@ foreach($categories as $val){
                 </li>
                 <li class="nav-item active">
                     <a class="nav-link" href="#" data-toggle="modal" data-target="#store_physical_info">運動量・体重<span class="sr-only">(current)</span></a>
-                  </li>
-                <li class="nav-item dropdown active" style="width: 350px;">
+                </li>
+                <li class="nav-item dropdown active" style="width: 115px;">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      MAXチェック
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxCalorieModal"><font color="#000">カロリー最大値</font></a></li>          
+                    </ul>
+                </li>
+                <li class="nav-item dropdown active" style="width:190px;">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                       グラフ種類
                     </a>
@@ -118,9 +126,9 @@ foreach($categories as $val){
                       <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph4')}}" >歩数と確定体重</a></li>
                     </ul>
                 </li>
-                {{-- <li class="nav-item active">
+                <!-- <li class="nav-item active">
                     <a class="nav-link" href="{{route('calorie.chartgraph')}}" >チャートグラフ画面</a>
-                </li>
+                </li> -->
               </ul>
               <form method="get" action="{{route('calorie')}}" class="form-inline my-2 my-lg-0" autocomplete="off">
                 {{ csrf_field() }}

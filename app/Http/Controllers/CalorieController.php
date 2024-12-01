@@ -17,6 +17,7 @@ use Illuminate\Support\Collection;
 use App\Models\Physical_data;
 use Illuminate\Support\Facades\Log;
 use DateTime;
+use Carbon\Carbon;
 
 
 class CalorieController extends Controller
@@ -804,5 +805,24 @@ class CalorieController extends Controller
         }
 
         return $weekNumber;
+    }
+
+    /**
+     * 接種カロリー最大値を取得する
+     */
+    public function getMaxColorie()
+    {
+        $year = Carbon::now()->year;
+
+        $maxCalories = DB::table('calories')
+            ->select(DB::raw("tgtdate,sum(calories.tgtcalorie) as maxcalorie"))
+            ->where('tgtcategory', '<>', '106')
+            ->whereYear('tgtdate', $year)
+            ->groupBy('tgtdate')
+            ->orderBy('maxcalorie', 'desc')
+            ->limit(10)
+            ->get();
+        // dd($maxCalories->dd());
+        return response()->json($maxCalories);
     }
 }

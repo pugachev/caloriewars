@@ -24,7 +24,6 @@ foreach($physical_categories as $val){
     $physical_cate_data .= "<option value='". $val->physical_cateid;
     $physical_cate_data .= "'>". $val->physical_catename. "</option>";
 }
-// dd($paginatedItems);
 ?>
 <div class="mx-auto col-12" style="text-align:center;">
     <div><h3>食べすぎやろ</h3></div>
@@ -133,9 +132,42 @@ foreach($physical_categories as $val){
             },0);
         }
     });
-
-    // $('#mytable').tablesorter();
-
+    function formatDate(dateString) {
+                const date = new Date(dateString);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+    }
+    $('#openMaxCalorieModal').on('show.bs.modal', function() {
+        $.ajax({
+            url: '{{ route('calorie.max') }}', // 相対パスを使用
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                console.log('Data received:', data); // デバッグ用にレスポンスをログに出力
+                if (!Array.isArray(data)) {
+                    console.error('Expected an array but got something else');
+                    return;
+                }
+                const list = $('#maxCalorieList');
+                list.empty();
+                data.forEach(item => {
+                    const formattedDate = formatDate(item['tgtdate']);
+                    const row = $(`
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${item['maxcalorie']}</td>
+                        </tr>
+                    `);
+                    list.append(row);
+                });
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('There was a problem with the ajax operation:', textStatus, errorThrown);
+            }
+        });
+    });
   });
   $('.datepicker').datepicker({
     // オプションを設定
@@ -143,6 +175,12 @@ foreach($physical_categories as $val){
     format: 'yyyy/mm/dd', // 日付表示をyyyy/mm/ddにフォーマット
   });
 </script>
+<style>
+    .no-bullets {
+        list-style-type: none;
+        padding-left: 0; /* インデントを削除する場合 */
+    }
+</style>
 </body>
 </html>
 <!-- 摂取熱量モーダルダイアログ -->
@@ -338,5 +376,33 @@ foreach($physical_categories as $val){
 </form>
 </div>
 </div>
+</div>
+<!-- カロリー最大値モーダルダイアログ -->
+<div class="modal fade" id="openMaxCalorieModal" tabindex="-1" role="dialog" aria-labelledby="maxCalorieModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="maxCalorieModalLabel">最大カロリー</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h1 class="mb-4">カロリー一覧</h1>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">日付</th>
+                            <th scope="col">合計カロリー</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maxCalorieList"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

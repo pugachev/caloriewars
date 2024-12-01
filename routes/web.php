@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\CalorieController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect('/calorie');
 });
+Route::get('/max-calorie', [CalorieController::class, 'getMaxColorie'])->name('calorie.max');
 Route::get('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::post('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::get('/calorie/show/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'show'])->name('calorie.show');
