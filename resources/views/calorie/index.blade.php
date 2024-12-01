@@ -24,7 +24,7 @@ foreach($physical_categories as $val){
     $physical_cate_data .= "<option value='". $val->physical_cateid;
     $physical_cate_data .= "'>". $val->physical_catename. "</option>";
 }
-
+// dd($paginatedItems);
 ?>
 <div class="mx-auto col-12" style="text-align:center;">
     <div><h3>食べすぎやろ</h3></div>
@@ -62,7 +62,13 @@ foreach($physical_categories as $val){
                     }else{
                         echo '<td>' . date('Y-m-d',strtotime($result->tgtdate)).' <span> ('.$result->weekday.') </span>'.'</td>';
                     }
-                    echo '<td class="text-center">'.$result->sumcolorie.'</td>';
+
+                    if($result->has_tgtcategory_104==1){
+                        echo '<td class="text-center"><span style="display:inline-block; width: 50px; text-align: right;">' . $result->sumcolorie . '</span><img style="width:20px;height:20px; margin-left: 5px;" src="' . asset('img/beer.png') . '"></td>';
+                    }else{
+                        echo '<td class="text-center text-right">'.$result->sumcolorie.'</td>';
+                    }
+                    
                     echo '<td class="text-center">'.$result->walking_time.'</td>';
                     echo '<td class="text-center">'.$result->walking_steps.'</td>';
                     echo '<td class="text-center">'.$result->walking_distance.'</td>';

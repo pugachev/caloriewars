@@ -34,11 +34,12 @@ class CalorieController extends Controller
         // 摂取熱量データ
         $results = "";
         $results = DB::table('calories')
-        ->selectRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') as tgtdate ,sum(calories.tgtcalorie) as sumcolorie")
+        ->selectRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') as tgtdate,sum(calories.tgtcalorie) as sumcolorie,MAX(CASE WHEN calories.tgtcategory = '104' THEN 1 ELSE 0 END) as has_tgtcategory_104")
         ->where('tgtcategory','!=','106')
         ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [date('Y')])
         ->groupByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d')")
         ->orderByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') desc")->get();
+        // ->orderByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') desc")->dd(); // SQLのデバッグ文
         // ->paginate(10);
 
         // 運動量・体重データ
