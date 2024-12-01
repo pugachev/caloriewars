@@ -820,6 +820,7 @@ class CalorieController extends Controller
             ->whereYear('tgtdate', $year)
             ->groupBy('tgtdate')
             ->orderBy('maxcalorie', 'desc')
+            ->orderBy('tgtdate', 'desc')
             ->limit(10)
             ->get();
         // dd($maxCalories->dd());
