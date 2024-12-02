@@ -227,13 +227,11 @@ class CalorieController extends Controller
             ->groupBy('calories.tgtdate')
             ->value('totalcaloriesum');
 
-        $totalconsumptionsum = DB::table('calories')
-            ->select(DB::raw("sum(calories.tgtcalorie) as totalcaloriesum"))
-            ->where('tgtdate',$tgtdate)
-            ->where('tgtcategory','=','106')
-            ->groupBy('calories.tgtdate')
-            ->value('totalcaloriesum');
-
+        $totalconsumptionsum = DB::table('physical_datas')
+            ->select(DB::raw("physical_datas.tgt_physical_data as totalcaloriesum"))
+            ->where('physical_datas.tgt_physical_category','=','204')
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y-%m-%d') = ?", $tgtdate)
+            ->value('totalconsumptionsum');
 
             $week = array( "日", "月", "火", "水", "木", "金", "土" );
             $datetime = new DateTime($tgtdate);
@@ -691,7 +689,7 @@ class CalorieController extends Controller
     }
 
     /**
-     * チャートグラフを作成
+     * ��ャートグラフを作成
      */
     public function chartgraph(Request $request) {
         $rsumcalorie="";

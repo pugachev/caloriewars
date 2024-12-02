@@ -130,7 +130,7 @@ foreach($categories as $val){
                     <a class="nav-link" href="{{route('calorie.chartgraph')}}" >チャートグラフ画面</a>
                 </li> -->
               </ul>
-              <form method="get" action="{{route('calorie')}}" class="form-inline my-2 my-lg-0" autocomplete="off">
+              <!-- <form method="get" action="{{route('calorie')}}" class="form-inline my-2 my-lg-0" autocomplete="off">
                 {{ csrf_field() }}
                 <span class="mx-1" style="color:#fff;">開始日付</span>
                 <input type="text" class="input-sm form-control datepicker mr-sm-2" id="from" name="from" value="{{old('from')}}">
@@ -141,10 +141,10 @@ foreach($categories as $val){
                 </select>
                 <!-- <input type="checkbox" class="form-check-input" id="overcalorie" name="overcalorie" value="1"> -->
                 <!-- <label class="form-check-label" for="overcalorie" style="color:#fff;">摂取過多</label> -->
-                <input class="form-control mr-sm-2" type="search" placeholder="検索" id="searchword" name="searchword" value="{{old('searchword')}}" aria-label="検索">
+                <!-- <input class="form-control mr-sm-2" type="search" placeholder="検索" id="searchword" name="searchword" value="{{old('searchword')}}" aria-label="検索">
                 <input type="hidden" value="" id="hiddenCate" name="hiddenCate">
-                <button class="btn btn-info my-2 my-sm-0" style="color:#fff;" type="submit">検索</button>
-              </form> --}}
+                <button class="btn btn-info my-2 my-sm-0" style="color:#fff;" type="submit">検索</button> -->
+              <!-- </form> -->
             </div>
         </nav>
         <main class="py-4">

@@ -47,7 +47,7 @@ foreach($categories as $val){
     <div class="d-flex flex-row bd-highlight justify-content-center">
         <div class="p-2 bd-highlight">実熱量合計:<strong><?php echo $totalcaloriesum; ?></strong></div>
         <div class="p-2 bd-highlight">実運動量合計:<strong><?php echo $totalconsumptionsum; ?></strong></div>
-        <?php if((intval($totalcaloriesum)-(intval($totalconsumptionsum)))>1600): ?>
+        <?php if(intval($totalcaloriesum)>(intval($totalconsumptionsum))): ?>
             <div class="p-2 bd-highlight">計算済熱量合計:<strong style="color:red"><?php echo intval($totalcaloriesum)-(intval($totalconsumptionsum)); ?></strong></div>
         <?php else : ?>
             <div class="p-2 bd-highlight">計算済熱量合計:<strong><?php echo intval($totalcaloriesum)-(intval($totalconsumptionsum)); ?></strong></div>

@@ -29,7 +29,7 @@ foreach($physical_categories as $val){
     <div><h3>食べすぎやろ</h3></div>
 </div>
 <div class="mx-auto col-12 d-flex flex-row justify-content-center">
-    <div class="mr-2"><h4><small>目標:<strong>1600kcal</strong></small></h4></div>
+    <div class="mr-2"><h4><small>目標:<strong>1450kcal</strong></small></h4></div>
 </div>
 <div class="mx-auto col-12" style="text-align:center;">
     <div class="table-responsive-sm text-nowrap">
