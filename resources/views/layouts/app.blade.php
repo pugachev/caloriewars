@@ -112,7 +112,9 @@ foreach($categories as $val){
                       MAXチェック
                     </a>
                     <ul class="dropdown-menu">
-                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxCalorieModal"><font color="#000">カロリー最大値</font></a></li>          
+                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxCalorieModal"><font color="#000">カロリー最大値</font></a></li>
+                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxStepsModal"><font color="#000">歩数最大値</font></a></li>
+                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxDistanceModal"><font color="#000">歩行距離最大値</font></a></li> 
                     </ul>
                 </li>
                 <li class="nav-item dropdown active" style="width:190px;">

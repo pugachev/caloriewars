@@ -168,6 +168,67 @@ foreach($physical_categories as $val){
             }
         });
     });
+
+    $('#openMaxStepsModal').on('show.bs.modal', function() {
+        $.ajax({
+            url: '{{ route('calorie.steps') }}', // 相対パスを使用
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                console.log('Data received:', data); // デバッグ用にレスポンスをログに出力
+                if (!Array.isArray(data)) {
+                    console.error('Expected an array but got something else');
+                    return;
+                }
+                const list = $('#maxStepsList');
+                list.empty();
+                data.forEach(item => {
+                    const formattedDate = formatDate(item['tgt_physical_date']);
+                    const row = $(`
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${item['maxsteps']}</td>
+                        </tr>
+                    `);
+                    list.append(row);
+                });
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('There was a problem with the ajax operation:', textStatus, errorThrown);
+            }
+        });
+    });
+
+    $('#openMaxDistanceModal').on('show.bs.modal', function() {
+        $.ajax({
+            url: '{{ route('calorie.distance') }}', // 相対パスを使用
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                console.log('Data received:', data); // デバッグ用にレスポンスをログに出力
+                if (!Array.isArray(data)) {
+                    console.error('Expected an array but got something else');
+                    return;
+                }
+                const list = $('#maxDistanceList');
+                list.empty();
+                data.forEach(item => {
+                    const formattedDate = formatDate(item['tgt_physical_date']);
+                    const row = $(`
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${item['maxdistance']}</td>
+                        </tr>
+                    `);
+                    list.append(row);
+                });
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('There was a problem with the ajax operation:', textStatus, errorThrown);
+            }
+        });
+    });
+
   });
   $('.datepicker').datepicker({
     // オプションを設定
@@ -393,10 +454,66 @@ foreach($physical_categories as $val){
                     <thead>
                         <tr>
                             <th scope="col">日付</th>
-                            <th scope="col">合計カロリー</th>
+                            <th scope="col">カロリー</th>
                         </tr>
                     </thead>
                     <tbody id="maxCalorieList"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 歩数最大値モーダルダイアログ -->
+<div class="modal fade" id="openMaxStepsModal" tabindex="-1" role="dialog" aria-labelledby="maxStespModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="maxStepsModalLabel">最大歩数</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h1 class="mb-4">歩数一覧</h1>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">日付</th>
+                            <th scope="col">歩数</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maxStepsList"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 歩行距離最大値モーダルダイアログ -->
+<div class="modal fade" id="openMaxDistanceModal" tabindex="-1" role="dialog" aria-labelledby="maxDistanceModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="maxDistanceModalLabel">最大歩行距離</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h1 class="mb-4">歩行距離一覧</h1>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">日付</th>
+                            <th scope="col">歩行距離</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maxDistanceList"></tbody>
                 </table>
             </div>
             <div class="modal-footer">

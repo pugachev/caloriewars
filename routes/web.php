@@ -16,6 +16,8 @@ Route::get('/', function () {
     return redirect('/calorie');
 });
 Route::get('/max-calorie', [CalorieController::class, 'getMaxColorie'])->name('calorie.max');
+Route::get('/max-steps', [CalorieController::class, 'getMaxSteps'])->name('calorie.steps');
+Route::get('/max-distance', [CalorieController::class, 'getMaxDistance'])->name('calorie.distance');
 Route::get('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::post('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::get('/calorie/show/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'show'])->name('calorie.show');

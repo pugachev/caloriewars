@@ -824,4 +824,42 @@ class CalorieController extends Controller
         // dd($maxCalories->dd());
         return response()->json($maxCalories);
     }
+
+    /**
+     * 歩数最大値を取得する
+     */
+    public function getMaxSteps()
+    {
+        $year = Carbon::now()->year;
+
+        $maxSteps = DB::table('physical_datas')
+            ->select(DB::raw('tgt_physical_date,tgt_physical_data as maxsteps'))
+            ->where('tgt_physical_category', '=', '201')
+            ->whereYear('tgt_physical_date', $year)
+            ->orderBy('tgt_physical_data', 'desc')
+            ->orderBy('tgt_physical_date', 'desc')
+            ->limit(10)
+            ->get();
+        // dd($maxDistance);
+        return response()->json($maxSteps);
+    }
+
+    /**
+     * 歩行距離最大値を取得する
+     */
+    public function getMaxDistance()
+    {
+        $year = Carbon::now()->year;
+
+        $maxDistance = DB::table('physical_datas')
+            ->select(DB::raw('tgt_physical_date,tgt_physical_data as maxdistance'))
+            ->where('tgt_physical_category', '=', '202')
+            ->whereYear('tgt_physical_date', $year)
+            ->orderBy('tgt_physical_data', 'desc')
+            ->orderBy('tgt_physical_date', 'desc')
+            ->limit(10)
+            ->get();
+        // dd($maxDistance);
+        return response()->json($maxDistance);
+    }
 }
