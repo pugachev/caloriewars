@@ -12,14 +12,14 @@ use App\Http\Controllers\CalorieController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('/', function () {
-    return redirect('/calorie');
-});
+// Route::get('/', function () {
+//     return redirect('/calorie');
+// });
 Route::get('/max-calorie', [CalorieController::class, 'getMaxColorie'])->name('calorie.max');
 Route::get('/max-steps', [CalorieController::class, 'getMaxSteps'])->name('calorie.steps');
 Route::get('/max-distance', [CalorieController::class, 'getMaxDistance'])->name('calorie.distance');
 Route::get('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
-Route::post('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
+// Route::post('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
 Route::get('/calorie/show/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'show'])->name('calorie.show');
 Route::get('/calorie/showphysical/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'showphysical'])->name('calorie.showphysical');
 Route::get('/calorie/makegraph}', [App\Http\Controllers\CalorieController::class, 'makegraph'])->name('calorie.makegraph');
@@ -27,7 +27,7 @@ Route::get('/calorie/makegraph2}', [App\Http\Controllers\CalorieController::clas
 Route::get('/calorie/makegraph3}', [App\Http\Controllers\CalorieController::class, 'makegraph3'])->name('calorie.makegraph3');
 Route::get('/calorie/makegraph4}', [App\Http\Controllers\CalorieController::class, 'makegraph4'])->name('calorie.makegraph4');
 Route::get('/calorie/chartgraph', [App\Http\Controllers\CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
-Route::post('/calorie/chartgraph', [App\Http\Controllers\CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
+// Route::post('/calorie/chartgraph', [App\Http\Controllers\CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
 Route::post('/calorie/store', [App\Http\Controllers\CalorieController::class, 'store'])->name('calorie.store');
 Route::post('/calorie/store_physical_info', [App\Http\Controllers\CalorieController::class, 'store_physical_info'])->name('calorie.store_physical_info');
 Route::post('/calorie/update', [App\Http\Controllers\CalorieController::class, 'update'])->name('calorie.update');

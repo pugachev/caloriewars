@@ -689,7 +689,7 @@ class CalorieController extends Controller
     }
 
     /**
-     * ��ャートグラフを作成
+     * チャートグラフを作成
      */
     public function chartgraph(Request $request) {
         $rsumcalorie="";
