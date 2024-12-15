@@ -384,7 +384,7 @@ class CalorieController extends Controller
 
         $results="";
         $query = DB::table('calories')
-        ->select('calories.tgtdate as tgtdate', DB::raw("sum(calories.tgtcalorie) as sumcolorie"));
+        ->select('calories.tgtdate as tgtdate', DB::raw("sum(tgtcalorie) as sumcolorie"));
 
         //運動量の合計をあつめる
         $query->where('tgtcategory','106');
@@ -467,6 +467,65 @@ class CalorieController extends Controller
             ->get();
     
         return view('calorie.statics_cal_weight', compact('labels', 'weeksum', 'categories', 'week_avg_weight'));
+    }
+
+    /**
+     * 第x週の合計折れ線グラフを作成
+     * 摂取カロリーと確定体重
+     */
+    public function makegraphajax(Request $request) {
+        $year = $request->input('tgtyear', date('Y'));
+    
+        // (A) 週単位でカロリー接収データを集める
+        $results = DB::table('calories')
+            ->selectRaw("sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week, date_format(tgtdate ,'%Y') as year")
+            ->where('tgtcategory', '!=', '106')
+            ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [$year])
+            ->groupBy("week", "year")->get();
+    
+        // 横軸に表示する第x週ラベル
+        $labels = array();
+        // 第x週のカロリー合計値
+        $weeksum = array();
+        foreach($results as $result){
+            // labelの追加
+            array_push($labels, $result->week);
+            array_push($weeksum, $result->weeksum);
+        }
+    
+        // (B) 週単位で確定体重データを集める
+        $physical_results = DB::table('physical_datas')
+            ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight, date_format(tgt_physical_date ,'%U') as week, date_format(tgt_physical_date ,'%Y') as year")
+            ->where("tgt_physical_category","=","203")
+            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [$year])
+            ->groupBy("week", "year")->get();
+    
+        // 週単位の平均体重を格納する配列
+        $week_avg_weight = array();
+    
+        // カロリーの週単位の配列を利用して平均確定配列を0で初期化
+        for($i = 0; $i < count($labels); $i++){
+            $week_avg_weight[$i] = 0;
+        }
+    
+        // 平均体重の配列に第x週を添え字にして平均体重を格納する
+        foreach($physical_results as $result){
+            $week_avg_weight[$result->week] = $result->week_avg_weight;
+        }
+    
+        // フィジカルデータ用のカテゴリを集める
+        $categories = DB::table('categories')
+            ->select('cateid', 'catename')
+            ->orderBy('cateid', 'asc')
+            ->get();
+    
+        return response()->json([
+            'labels' => $labels,
+            'weeksum' => $weeksum,
+            'week_avg_weight' => $week_avg_weight,
+            'categories' => $categories,
+            'year' => $year
+        ]);
     }
 
     /**
@@ -564,7 +623,7 @@ class CalorieController extends Controller
                 ];
             });
     
-        // 横軸に表示する第x週ラベル
+        // 横軸に表示する第x週���ベル
         $labels = array();
         // 第x週のカロリー合計値
         $weeksum = array();

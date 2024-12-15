@@ -27,7 +27,21 @@
     <div class="container">
         <div class="row">
             <div class="container" style="text-align:center;">
-                <canvas id="lineChart"></canvas>
+                <!-- <canvas id="lineChart"></canvas> -->
+                <p id="tabcontrol">
+                    <a href="#tabpage1">2024</a>
+                    <a href="#tabpage2">2023</a>
+                </p>
+                <div id="tabbody">
+                    <div id="tabpage1" style="display:none;">
+                        <canvas id="lineChart2024"></canvas>
+                    </div>
+                    <div id="tabpage2" style="display:none;">
+                        <canvas id="lineChart2023"></canvas>
+                    </div>
+                </div>
+              </div>
+              <canvas id="lineChart"></canvas>
             </div>
         </div>
     </div>
@@ -40,11 +54,154 @@
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
 <style>
+    /* タブのスタイル */
+    #tabcontrol a {
+        display: inline-block;
+        border-width: 1px 1px 0px 1px;
+        border-style: solid;
+        border-color: black;
+        border-radius: 0.75em 0.75em 0 0;
+        padding: 0.75em 1em;
+        text-decoration: none;
+        color: black;
+        font-weight: bold;
+        position: relative;
+        background-color: #f0f0f0; /* デフォルト背景色をグレーに */
+    }
+
+    #tabcontrol a:nth-child(odd) {
+        background-color: #ffffff; /* 奇数番目は白色 */
+    }
+
+    #tabcontrol a.active {
+        background-color: #d0d0d0; /* 選択時の背景色を濃いグレーに */
+    }
+
+    #tabcontrol a:hover {
+        text-decoration: underline;
+    }
+
+    #tabbody div {
+        border: 1px solid black;
+        margin-top: -1px;
+        padding: 1em;
+        background-color: white;
+        position: relative;
+        z-index: 0;
+    }
 </style>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
 <script type="text/javascript">
   $(function(){
+    let lineChart2024 = null;
+    let lineChart2023 = null;
+
+    var tabs = $('#tabcontrol a');
+    var pages = $('#tabbody div');
+
+    function changeTab(event) {
+        event.preventDefault();
+        var targetId = $(this).attr('href').replace('#', '');
+        var param1 = targetId === 'tabpage1' ? 2024 : 2023; // ここでparam1を設定
+
+        // タブページの表示切り替え
+        pages.hide();
+        $('#' + targetId).show();
+
+        // タブの選択状態をリセットしてから設定
+        tabs.removeClass('active');
+        $(this).addClass('active');
+
+        $.ajax({
+            url: '{{ route('calorie.makegraphajax') }}', // 正しいルート名を使用
+            method: 'GET',
+            dataType: 'json',
+            data: { tgtyear: param1},
+            success: function(data) {
+                let lineCtx = document.getElementById(targetId === 'tabpage1' ? "lineChart2024" : "lineChart2023").getContext('2d');
+                // 線グラフの設定
+                let lineConfig = {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'カロリー週計',
+                                data: data.weeksum,
+                                borderColor: '#f88',
+                                yAxisID: 'left-y-axis'
+                            },
+                            {
+                                label: '週平均体重',
+                                data: data.week_avg_weight,
+                                borderColor: '#6495ED',
+                                yAxisID: 'right-y-axis'
+                            }
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            'left-y-axis': {
+                                id: 'y1',
+                                position: 'left',
+                                type: 'linear',
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "摂取カロリー",
+                                    fontColor: "red",
+                                    fontSize: 14
+                                },
+                                ticks: {
+                                    min: 0,
+                                    max: 8000,
+                                    stepSize: 500,
+                                }
+                            },
+                            'right-y-axis': {
+                                id: 'y2',
+                                position: 'right',
+                                type: 'linear',
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "平均体重",
+                                    fontColor: "blue",
+                                    fontSize: 14
+                                },
+                                ticks: {
+                                    min: 55,
+                                    max: 70,
+                                    stepSize: 10,
+                                }
+                            }
+                        },
+                    },
+                };
+                if (param1 === 2024) {
+                    if (lineChart2024) {
+                        lineChart2024.destroy();
+                    }
+                    lineChart2024 = new Chart(lineCtx, lineConfig);
+                } else {
+                    if (lineChart2023) {
+                        lineChart2023.destroy();
+                    }
+                    lineChart2023 = new Chart(lineCtx, lineConfig);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('There was a problem with the ajax operation:', textStatus, errorThrown);
+            }
+        });
+    }
+
+    // 各タブにクリッ���イベントを設定
+    tabs.on('click', changeTab);
+
+    // 最初のタブを選択状態にする
+    tabs.first().click(); // ここで最初のタブをクリックして初期表示
+
     setTimeout(function () {
         //保存後に画面がリダイレクトされることを利用している
         $('#alert').fadeOut(3000);
@@ -63,71 +220,71 @@
     });
   });
   $('.datepicker').datepicker({
-    // オプションを設定
+    // 日付プションを設定
     language:'ja', // 日本語化
     format: 'yyyy/mm/dd', // 日付表示をyyyy/mm/ddにフォーマット
   });
 
-    let lineCtx = document.getElementById("lineChart").getContext('2d');
-    // 線グラフの設定
-    let lineConfig = {
-        type: 'line',
-        data: {
-        // ※labelとデータの関係は得にありません
-        labels: <?php echo $labels; ?>,
-        datasets: [
-            {
-                label: 'カロリー週計',
-                data: <?php echo $weeksum; ?>,
-                borderColor: '#f88',
-                yAxisID: 'left-y-axis'
-            },
-            {
-                label: '週平均体重',
-                data: <?php echo $physical_results; ?>,
-                borderColor: '#6495ED',
-                yAxisID: 'right-y-axis'
-            }],
-        },
-        options: {
-            responsive: true,
-            scales: {
-                'left-y-axis': {
-                    id: 'y1',
-                    position: 'left',
-                    type: 'linear',
-                    scaleLabel: {         // 軸ラベル設定
-                        display: true,          //表示設定
-                        labelString: "摂取カロリー",  //ラベル
-                        fontColor: "red",
-                        fontSize: 14               //フォントサイズ
-                    },
-                    ticks: {
-                        min: 0,
-                        max: 8000,
-                        stepSize: 500,
-                    }
-                },
-                'right-y-axis': {
-                    id: 'y2',
-                    position: 'right',
-                    type: 'linear',
-                    scaleLabel: {         // 軸ラベル設定
-                        display: true,          //表示設定
-                        labelString: "平均体重",  //ラベル
-                        fontColor: "blue",
-                        fontSize: 14               //フォントサイズ
-                    },
-                    ticks: {
-                        min: 55,
-                        max: 70,
-                        stepSize: 10,
-                    }
-                }
-            },
-        },
-    };
-    let lineChart = new Chart(lineCtx, lineConfig);
+    // // let lineCtx = document.getElementById("lineChart").getContext('2d');
+    // // 線グラフの設定
+    // let lineConfig = {
+    //     type: 'line',
+    //     data: {
+    //     // ※labelとデータの関係は得にありません
+    //     labels: <?php echo $labels; ?>,
+    //     datasets: [
+    //         {
+    //             label: 'カロリー週計',
+    //             data: <?php echo $weeksum; ?>,
+    //             borderColor: '#f88',
+    //             yAxisID: 'left-y-axis'
+    //         },
+    //         {
+    //             label: '週平均体重',
+    //             data: <?php echo $physical_results; ?>,
+    //             borderColor: '#6495ED',
+    //             yAxisID: 'right-y-axis'
+    //         }],
+    //     },
+    //     options: {
+    //         responsive: true,
+    //         scales: {
+    //             'left-y-axis': {
+    //                 id: 'y1',
+    //                 position: 'left',
+    //                 type: 'linear',
+    //                 scaleLabel: {         // 軸ラベル設定
+    //                     display: true,          //表示設定
+    //                     labelString: "摂取カロリー",  //ラベル
+    //                     fontColor: "red",
+    //                     fontSize: 14               //フォントサイズ
+    //                 },
+    //                 ticks: {
+    //                     min: 0,
+    //                     max: 8000,
+    //                     stepSize: 500,
+    //                 }
+    //             },
+    //             'right-y-axis': {
+    //                 id: 'y2',
+    //                 position: 'right',
+    //                 type: 'linear',
+    //                 scaleLabel: {         // 軸ラベル設定
+    //                     display: true,          //表示設定
+    //                     labelString: "平均体重",  //ラベル
+    //                     fontColor: "blue",
+    //                     fontSize: 14               //フォントサイズ
+    //                 },
+    //                 ticks: {
+    //                     min: 55,
+    //                     max: 70,
+    //                     stepSize: 10,
+    //                 }
+    //             }
+    //         },
+    //     },
+    // };
+    // lineChart2024 = new Chart(lineCtx, lineConfig);
 
 
 </script>
