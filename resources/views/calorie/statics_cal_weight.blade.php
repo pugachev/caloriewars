@@ -29,14 +29,18 @@
             <div class="container" style="text-align:center;">
                 <!-- <canvas id="lineChart"></canvas> -->
                 <p id="tabcontrol">
-                    <a href="#tabpage1">2024</a>
-                    <a href="#tabpage2">2023</a>
+                    <a href="#tabpage1">2025</a>
+                    <a href="#tabpage2">2024</a>
+                    <a href="#tabpage3">2023</a>
                 </p>
                 <div id="tabbody">
                     <div id="tabpage1" style="display:none;">
-                        <canvas id="lineChart2024"></canvas>
+                        <canvas id="lineChart2025"></canvas>
                     </div>
                     <div id="tabpage2" style="display:none;">
+                        <canvas id="lineChart2024"></canvas>
+                    </div>
+                    <div id="tabpage3" style="display:none;">
                         <canvas id="lineChart2023"></canvas>
                     </div>
                 </div>
@@ -110,7 +114,20 @@
     function changeTab(event) {
         event.preventDefault();
         var targetId = $(this).attr('href').replace('#', '');
-        var param1 = targetId === 'tabpage1' ? 2024 : 2023; // ここでparam1を設定
+        var param1;
+        
+        // タブに応じて年を設定
+        switch(targetId) {
+            case 'tabpage1':
+                param1 = 2025;
+                break;
+            case 'tabpage2':
+                param1 = 2024;
+                break;
+            case 'tabpage3':
+                param1 = 2023;
+                break;
+        }
 
         // タブページの表示切り替え
         pages.hide();
@@ -121,12 +138,26 @@
         $(this).addClass('active');
 
         $.ajax({
-            url: '{{ route('calorie.makegraphajax') }}', // 正しいルート名を使用
+            url: '{{ route('calorie.makegraphajax') }}', // 正し��ルート名を使用
             method: 'GET',
             dataType: 'json',
             data: { tgtyear: param1},
             success: function(data) {
-                let lineCtx = document.getElementById(targetId === 'tabpage1' ? "lineChart2024" : "lineChart2023").getContext('2d');
+                // 年に応じて適切なcanvas IDを選択
+                let canvasId;
+                switch(param1) {
+                    case 2025:
+                        canvasId = "lineChart2025";
+                        break;
+                    case 2024:
+                        canvasId = "lineChart2024";
+                        break;
+                    case 2023:
+                        canvasId = "lineChart2023";
+                        break;
+                }
+                
+                let lineCtx = document.getElementById(canvasId).getContext('2d');
                 // 線グラフの設定
                 let lineConfig = {
                     type: 'line',
@@ -185,16 +216,27 @@
                         },
                     },
                 };
-                if (param1 === 2024) {
-                    if (lineChart2024) {
-                        lineChart2024.destroy();
-                    }
-                    lineChart2024 = new Chart(lineCtx, lineConfig);
-                } else {
-                    if (lineChart2023) {
-                        lineChart2023.destroy();
-                    }
-                    lineChart2023 = new Chart(lineCtx, lineConfig);
+
+                // 既存のグラフを破棄して新しいグラフを作成
+                switch(param1) {
+                    case 2025:
+                        if (lineChart2025) {
+                            lineChart2025.destroy();
+                        }
+                        lineChart2025 = new Chart(lineCtx, lineConfig);
+                        break;
+                    case 2024:
+                        if (lineChart2024) {
+                            lineChart2024.destroy();
+                        }
+                        lineChart2024 = new Chart(lineCtx, lineConfig);
+                        break;
+                    case 2023:
+                        if (lineChart2023) {
+                            lineChart2023.destroy();
+                        }
+                        lineChart2023 = new Chart(lineCtx, lineConfig);
+                        break;
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -203,7 +245,7 @@
         });
     }
 
-    // 各タブにクリッ���イベントを設定
+    // 各タブにクリックイベントを設定
     tabs.on('click', changeTab);
 
     // 最初のタブを選択状態にする
