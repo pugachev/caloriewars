@@ -94,8 +94,15 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
 <script type="text/javascript">
   $(function(){
-    let lineChart2024 = null;
-    let lineChart2023 = null;
+    let lineChart2025 = null;  // 2025年のグラフ
+    let lineChart2024 = null;  // 2024年のグラフ
+    let lineChart2023 = null;  // 2023年のグラフ
+    
+    // タブを左端に寄せるためのスタイルを追加
+    $('#tabcontrol').css({
+        'text-align': 'left',
+        'margin-left': '0'
+    });
 
     var tabs = $('#tabcontrol a');
     var pages = $('#tabbody div');
