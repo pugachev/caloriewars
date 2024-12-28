@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CalorieController;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -11,15 +12,17 @@ use App\Http\Controllers\CalorieController;
 | routes are loaded by the RouteServiceProvider within a group which
 | contains the "web" middleware group. Now create something great!
 |
-*/
-// Route::get('/', function () {
-//     return redirect('/calorie');
-// });
+ */
+Route::get('/', function () {
+    return redirect('/calorie');
+});
 Route::get('/max-calorie', [CalorieController::class, 'getMaxColorie'])->name('calorie.max');
 Route::get('/max-steps', [CalorieController::class, 'getMaxSteps'])->name('calorie.steps');
 Route::get('/max-distance', [CalorieController::class, 'getMaxDistance'])->name('calorie.distance');
-Route::get('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
-// Route::post('/calorie', [App\Http\Controllers\CalorieController::class, 'index'])->name('calorie');
+Route::group(['middleware' => ['web']], function () {
+    Route::get('/calorie', [CalorieController::class, 'index'])->name('calorie');
+    // 他のcalorie関連のルート...
+});
 Route::get('/calorie/show/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'show'])->name('calorie.show');
 Route::get('/calorie/showphysical/{tgtdate}', [App\Http\Controllers\CalorieController::class, 'showphysical'])->name('calorie.showphysical');
 Route::get('/calorie/makegraph', [App\Http\Controllers\CalorieController::class, 'makegraph'])->name('calorie.makegraph');
@@ -38,4 +41,3 @@ Route::post('/calorie/destroyphysical', [App\Http\Controllers\CalorieController:
 Route::get('/calorie/makegraphajax', [App\Http\Controllers\CalorieController::class, 'makegraphajax'])->name('calorie.makegraphajax');
 
 Auth::routes();
-
