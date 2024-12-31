@@ -34,26 +34,50 @@ foreach($categories as $val){
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
     <link rel="shortcut icon" href="{{ asset('/favicon.png') }}">
 
-    {{-- 追加する --}}
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ asset('/favicon.png') }}">
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- Bootstrap CSS -->
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Datepicker CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+
+    <!-- JavaScript -->
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <!-- jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <!-- Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <!-- Bootstrap -->
     <script src="{{ asset('js/bootstrap.min.js') }}" defer></script>
+    <!-- Datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
+
+    <!-- その他のスクリプト -->
     <script src="{{ asset('js/main.js') }}" defer></script>
-    {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script> --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.4.1/chart.js"></script>
-<script type="text/javascript">
-  $(function(){
-    $('#searchcategory').change(function(){
-        var val = $(this).val();
-        $('#hiddeCate').val(val);
+
+    <script type="text/javascript">
+    $(document).ready(function(){
+        // datepickerの初期化をここで行う
+        $('.datepicker').datepicker({
+            language: 'ja',
+            format: 'yyyy/mm/dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        $('#searchcategory').change(function(){
+            var val = $(this).val();
+            $('#hiddeCate').val(val);
+        });
     });
-    $('.datepicker.datepicker-dropdown').datepicker({
-        language:'ja', // 日本語化
-        format: 'yyyy/mm/dd', // 日付表示をyyyy/mm/ddにフォーマット
-    });
-  });
-  </script>
+    </script>
+
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <style>
@@ -114,7 +138,7 @@ foreach($categories as $val){
                     <ul class="dropdown-menu">
                       <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxCalorieModal"><font color="#000">カロリー最大値</font></a></li>
                       <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxStepsModal"><font color="#000">歩数最大値</font></a></li>
-                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxDistanceModal"><font color="#000">歩行距離最大値</font></a></li> 
+                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxDistanceModal"><font color="#000">歩行距離最大値</font></a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown active" style="width:190px;">
