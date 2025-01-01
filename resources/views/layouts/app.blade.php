@@ -20,92 +20,72 @@ foreach($categories as $val){
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>caloriewars</title>
 
-    <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}" defer></script>
-
-    <!-- Fonts -->
-    <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
-    <link rel="shortcut icon" href="{{ asset('/favicon.png') }}">
-
     <!-- CSS -->
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
     <link rel="shortcut icon" href="{{ asset('/favicon.png') }}">
-    <!-- jQuery UI CSS -->
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <!-- Bootstrap CSS -->
-    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-    <!-- Datepicker CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+    @yield('styles')
 
     <!-- JavaScript -->
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <!-- jQuery UI -->
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <!-- Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <!-- Bootstrap -->
-    <script src="{{ asset('js/bootstrap.min.js') }}" defer></script>
-    <!-- Datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
-
-    <!-- その他のスクリプト -->
-    <script src="{{ asset('js/main.js') }}" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.4.1/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script type="text/javascript">
     $(document).ready(function(){
-        // datepickerの初期化をここで行う
-        $('.datepicker').datepicker({
-            language: 'ja',
-            format: 'yyyy/mm/dd',
-            autoclose: true,
-            todayHighlight: true
-        });
+        // jQueryUIの初期化を確実に行う
+        if ($.fn.datepicker) {
+            $('.datepicker').datepicker({
+                language: 'ja',
+                format: 'yyyy/mm/dd',
+                autoclose: true,
+                todayHighlight: true
+            });
+        }
 
         $('#searchcategory').change(function(){
             var val = $(this).val();
             $('#hiddeCate').val(val);
         });
+
+        // モーダルの初期化
+        $('[data-toggle="modal"]').click(function(e) {
+            e.preventDefault();
+            var targetModal = $(this).data('target');
+            $(targetModal).modal('show');
+        });
     });
     </script>
 
-    <!-- Styles -->
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <style>
         html {
             position: relative;
             min-height: 100%;
         }
         body {
-            /* Margin bottom by footer height */
             margin-bottom: 60px;
         }
         .container{
           width: 100%;
         }
-        .datepicker {
-          /* z-index: 9999 !important; */
-        }
-
         .footer {
             position: absolute;
             bottom: 0;
             width: 100%;
-            /* Set the fixed height of the footer here */
             height: 60px;
             text-align:center;
             background-color: #f5f5f5;
         }
-
         .footer > .container {
             width: auto;
             max-width: 680px;
@@ -114,7 +94,7 @@ foreach($categories as $val){
         .footer >.container .text-muted {
             margin: 20px 0;
         }
-      </style>
+    </style>
 </head>
 <body>
     <div id="app">
@@ -132,25 +112,25 @@ foreach($categories as $val){
                     <a class="nav-link" href="#" data-toggle="modal" data-target="#store_physical_info">運動量・体重<span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item dropdown active" style="width: 115px;">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      MAXチェック
+                    <a class="nav-link dropdown-toggle" href="#" id="maxCheckDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        MAXチェック
                     </a>
-                    <ul class="dropdown-menu">
-                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxCalorieModal"><font color="#000">カロリー最大値</font></a></li>
-                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxStepsModal"><font color="#000">歩数最大値</font></a></li>
-                      <li><a class="nav-link" href="#" data-toggle="modal" data-target="#openMaxDistanceModal"><font color="#000">歩行距離最大値</font></a></li>
-                    </ul>
+                    <div class="dropdown-menu" aria-labelledby="maxCheckDropdown">
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#openMaxCalorieModal">カロリー最大値</a>
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#openMaxStepsModal">歩数最大値</a>
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#openMaxDistanceModal">歩行距離最大値</a>
+                    </div>
                 </li>
                 <li class="nav-item dropdown active" style="width:190px;">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      グラフ種類
+                    <a class="nav-link dropdown-toggle" href="#" id="graphDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        グラフ種類
                     </a>
-                    <ul class="dropdown-menu">
-                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph')}}" >摂取カロリーと確定体重</a></li>
-                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph2')}}" >歩数と歩行距離</a></li>
-                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph3')}}" >歩数と歩行時間</a></li>
-                      <li><a style="color:black" class="nav-link" href="{{route('calorie.makegraph4')}}" >歩数と確定体重</a></li>
-                    </ul>
+                    <div class="dropdown-menu" aria-labelledby="graphDropdown">
+                        <a class="dropdown-item" href="{{route('calorie.makegraph')}}">摂取カロリーと確定体重</a>
+                        <a class="dropdown-item" href="{{route('calorie.makegraph2')}}">歩数と歩行距離</a>
+                        <a class="dropdown-item" href="{{route('calorie.makegraph3')}}">歩数と歩行時間</a>
+                        <a class="dropdown-item" href="{{route('calorie.makegraph4')}}">歩数と確定体重</a>
+                    </div>
                 </li>
                 <!-- <li class="nav-item active">
                     <a class="nav-link" href="{{route('calorie.chartgraph')}}" >チャートグラフ画面</a>
@@ -182,5 +162,9 @@ foreach($categories as $val){
           <p class="text-muted">Place sticky footer content here.</p>
         </div>
     </footer>
+
+    <!-- アプリケーション固有のスクリプト -->
+    <script src="{{ asset('js/main.js') }}"></script>
+    @yield('scripts')
 </body>
 </html>
