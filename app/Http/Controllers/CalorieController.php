@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 // include("jpgraph/src/jpgraph.php");
 // include("jpgraph/src/jpgraph_line.php");
 
-use App\Exceptions\Exception;
 use App\Models\Calorie;
 use App\Models\Physical_data;
 use DateTime;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -123,9 +123,9 @@ class CalorieController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): \Illuminate\Contracts\View\View
     {
-        //
+        return view('calorie.create');
     }
 
     /**
@@ -134,7 +134,7 @@ class CalorieController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $calorie = new Calorie();
         $calorie->tgtdate = date('Y-m-d', strtotime($request->tgtdate));
@@ -183,7 +183,7 @@ class CalorieController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($tgtdate)
+    public function show($tgtdate): \Illuminate\Contracts\View\View  | \Illuminate\Contracts\View\Factory
     {
         $results = DB::table('calories')
             ->select('calories.id as id', 'tgtdate', 'categories.cateid as cateid', 'categories.catename as catename', 'tgttimezone', 'tgtitem', 'tgtcalorie')
@@ -247,9 +247,9 @@ class CalorieController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($id): void
     {
-
+        // 空のメソッド
     }
 
     /**
@@ -259,7 +259,7 @@ class CalorieController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(Request $request): \Illuminate\Http\RedirectResponse
     {
         $calorie = Calorie::find($request->updateId);
         $calorie->tgtdate = $request->tgtdate;
@@ -300,7 +300,7 @@ class CalorieController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroyphysical(Request $request)
+    public function destroyphysical(Request $request): \Illuminate\Http\RedirectResponse
     {
         $physical_data = Physical_data::find($request->deleteId);
         $tmpdate = $request->dtgt_physical_date;
