@@ -465,66 +465,73 @@ class CalorieController extends Controller
      */
     public function makegraphajax(Request $request)
     {
-        $year = $request->input('tgtyear', date('Y'));
+        try {
+            $year = $request->input('tgtyear', date('Y'));
 
-        // (A) 週単位でカロリー接収データを集める
-        $results = DB::table('calories')
-            ->selectRaw("
-                sum(tgtcalorie) as weeksum,
-                FLOOR((DAYOFYEAR(tgtdate) - 1) / 7) as week,
-                date_format(tgtdate ,'%Y') as year
-            ")
-            ->where('tgtcategory', '!=', '106')
-            ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [$year])
-            ->groupBy("week", "year")->get();
+            // 52週分の配列を0で初期化（0週から51週まで）
+            $all_weeks = range(0, 51);
+            $weeksum = array_fill(0, 52, 0);
+            $week_avg_weight = array_fill(0, 52, 0);
 
-        // 横軸に表示する第x週ラベル
-        $labels = array();
-        // 第x週のカロリー合計値
-        $weeksum = array();
-        foreach ($results as $result) {
-            // labelの追加
-            array_push($labels, $result->week);
-            array_push($weeksum, $result->weeksum);
+            // (A) 週単位でカロリー接収データを集める
+            $results = DB::table('calories')
+                ->selectRaw("
+                    sum(tgtcalorie) as weeksum,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgtdate, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgtdate) + DAYOFWEEK(DATE_FORMAT(tgtdate, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgtdate) - 1) / 7)
+                    END as week,
+                    date_format(tgtdate ,'%Y') as year
+                ")
+                ->where('tgtcategory', '!=', '106')
+                ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [$year])
+                ->groupBy("week", "year")
+                ->orderBy("week")
+                ->get();
+
+            // カロリーデータの処理
+            foreach ($results as $result) {
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $weeksum[$result->week] = round($result->weeksum, 0);
+                }
+            }
+
+            // (B) 週単位で確定体重データを集める
+            $physical_results = DB::table('physical_datas')
+                ->selectRaw("
+                    round(avg(tgt_physical_data),2) as week_avg_weight,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgt_physical_date) + DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
+                    END as week,
+                    date_format(tgt_physical_date ,'%Y') as year
+                ")
+                ->where("tgt_physical_category", "=", "203")
+                ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
+                ->groupBy("week", "year")
+                ->orderBy("week")
+                ->get();
+
+            // 確定体重データの処理
+            foreach ($physical_results as $result) {
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $week_avg_weight[$result->week] = round($result->week_avg_weight, 1);
+                }
+            }
+
+            return response()->json([
+                'labels' => $all_weeks,
+                'weeksum' => $weeksum,
+                'week_avg_weight' => $week_avg_weight,
+                'year' => $year,
+            ]);
+
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return response()->json(['error' => 'データの取得に失敗しました。'], 500);
         }
-
-        // (B) 週単位で確定体重データを集める
-        $physical_results = DB::table('physical_datas')
-            ->selectRaw("
-                round(avg(tgt_physical_data),2) as week_avg_weight,
-                FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
-                date_format(tgt_physical_date ,'%Y') as year
-            ")
-            ->where("tgt_physical_category", "=", "203")
-            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [$year])
-            ->groupBy("week", "year")->get();
-
-        // 週単位の平均体重を格納する配列
-        $week_avg_weight = array();
-
-        // カロリーの週単位の配列を利用して平均確定配列を0で初期化
-        for ($i = 0; $i < count($labels); $i++) {
-            $week_avg_weight[$i] = 0;
-        }
-
-        // 平均体重の配列に第x週を添え字にして平均体重を格納する
-        foreach ($physical_results as $result) {
-            $week_avg_weight[$result->week] = $result->week_avg_weight;
-        }
-
-        // フィジカルデータ用のカテゴリを集める
-        $categories = DB::table('categories')
-            ->select('cateid', 'catename')
-            ->orderBy('cateid', 'asc')
-            ->get();
-
-        return response()->json([
-            'labels' => $labels,
-            'weeksum' => $weeksum,
-            'week_avg_weight' => $week_avg_weight,
-            'categories' => $categories,
-            'year' => $year,
-        ]);
     }
 
     /**
@@ -551,10 +558,19 @@ class CalorieController extends Controller
         try {
             $year = $request->input('tgtyear', date('Y'));
 
+            // 52週分の配列を0で初期化（0週から51週まで）
+            $all_weeks = range(0, 51);
+            $steps_data = array_fill(0, 52, 0);
+            $distance_data = array_fill(0, 52, 0);
+
             // (A) 週単位で歩数データを集める
             $steps_results = DB::table('physical_datas')
                 ->selectRaw("
-                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgt_physical_date) + DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
+                    END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
                     AVG(tgt_physical_data) as avg_steps
                 ")
@@ -567,7 +583,11 @@ class CalorieController extends Controller
             // (B) 週単位で歩行距離データを集める
             $distance_results = DB::table('physical_datas')
                 ->selectRaw("
-                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgt_physical_date) + DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
+                    END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
                     AVG(tgt_physical_data) as avg_distance
                 ")
@@ -577,32 +597,22 @@ class CalorieController extends Controller
                 ->orderBy('week')
                 ->get();
 
-            // データを整形
-            $labels = [];
-            $steps_data = [];
-            $distance_data = [];
-
             // 歩数データの処理
             foreach ($steps_results as $result) {
-                array_push($labels, $result->week);
-                array_push($steps_data, round($result->avg_steps, 2));
-            }
-
-            // 歩行距離データの配列を初期化
-            for ($i = 0; $i < count($labels); $i++) {
-                $distance_data[$i] = 0;
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $steps_data[$result->week] = round($result->avg_steps, 0);
+                }
             }
 
             // 歩行距離データの処理
             foreach ($distance_results as $result) {
-                if (in_array($result->week, $labels)) {
-                    $index = array_search($result->week, $labels);
-                    $distance_data[$index] = round($result->avg_distance, 2);
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $distance_data[$result->week] = round($result->avg_distance, 1);
                 }
             }
 
             return response()->json([
-                'labels' => $labels,
+                'labels' => $all_weeks,
                 'steps_data' => $steps_data,
                 'distance_data' => $distance_data,
                 'year' => $year,
@@ -629,10 +639,19 @@ class CalorieController extends Controller
         try {
             $year = $request->input('tgtyear', date('Y'));
 
+            // 52週分の配列を0で初期化（0週から51週まで）
+            $all_weeks = range(0, 51);
+            $steps_data = array_fill(0, 52, 0);
+            $time_data = array_fill(0, 52, 0);
+
             // (A) 週単位で歩数データを集める
             $steps_results = DB::table('physical_datas')
                 ->selectRaw("
-                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgt_physical_date) + DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
+                    END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
                     AVG(tgt_physical_data) as avg_steps
                 ")
@@ -645,7 +664,11 @@ class CalorieController extends Controller
             // (B) 週単位で歩行時間データを集める
             $time_results = DB::table('physical_datas')
                 ->selectRaw("
-                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgt_physical_date) + DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
+                    END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
                     AVG(tgt_physical_data) as avg_time
                 ")
@@ -655,32 +678,22 @@ class CalorieController extends Controller
                 ->orderBy('week')
                 ->get();
 
-            // データを整形
-            $labels = [];
-            $steps_data = [];
-            $time_data = [];
-
             // 歩数データの処理
             foreach ($steps_results as $result) {
-                array_push($labels, $result->week);
-                array_push($steps_data, round($result->avg_steps, 2));
-            }
-
-            // 歩行時間データの配列を初期化
-            for ($i = 0; $i < count($labels); $i++) {
-                $time_data[$i] = 0;
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $steps_data[$result->week] = round($result->avg_steps, 0);
+                }
             }
 
             // 歩行時間データの処理
             foreach ($time_results as $result) {
-                if (in_array($result->week, $labels)) {
-                    $index = array_search($result->week, $labels);
-                    $time_data[$index] = round($result->avg_time, 2);
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $time_data[$result->week] = round($result->avg_time, 0);
                 }
             }
 
             return response()->json([
-                'labels' => $labels,
+                'labels' => $all_weeks,
                 'steps_data' => $steps_data,
                 'time_data' => $time_data,
                 'year' => $year,
@@ -707,10 +720,19 @@ class CalorieController extends Controller
         try {
             $year = $request->input('tgtyear', date('Y'));
 
+            // 52週分の配列を0で初期化（0週から51週まで）
+            $all_weeks = range(0, 51);
+            $steps_data = array_fill(0, 52, 0);
+            $weight_data = array_fill(0, 52, 0);
+
             // (A) 週単位で歩数データを集める
             $steps_results = DB::table('physical_datas')
                 ->selectRaw("
-                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgt_physical_date) + DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
+                    END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
                     AVG(tgt_physical_data) as avg_steps
                 ")
@@ -723,7 +745,11 @@ class CalorieController extends Controller
             // (B) 週単位で確定体重データを集める
             $weight_results = DB::table('physical_datas')
                 ->selectRaw("
-                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    CASE
+                        WHEN DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) > 1
+                        THEN FLOOR((DAYOFYEAR(tgt_physical_date) + DAYOFWEEK(DATE_FORMAT(tgt_physical_date, '%Y-01-01')) - 2) / 7)
+                        ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
+                    END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
                     AVG(tgt_physical_data) as avg_weight
                 ")
@@ -733,32 +759,22 @@ class CalorieController extends Controller
                 ->orderBy('week')
                 ->get();
 
-            // データを整形
-            $labels = [];
-            $steps_data = [];
-            $weight_data = [];
-
             // 歩数データの処理
             foreach ($steps_results as $result) {
-                array_push($labels, $result->week);
-                array_push($steps_data, round($result->avg_steps, 2));
-            }
-
-            // 確定体重データの配列を初期化
-            for ($i = 0; $i < count($labels); $i++) {
-                $weight_data[$i] = 0;
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $steps_data[$result->week] = round($result->avg_steps, 0);
+                }
             }
 
             // 確定体重データの処理
             foreach ($weight_results as $result) {
-                if (in_array($result->week, $labels)) {
-                    $index = array_search($result->week, $labels);
-                    $weight_data[$index] = round($result->avg_weight, 2);
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $weight_data[$result->week] = round($result->avg_weight, 1);
                 }
             }
 
             return response()->json([
-                'labels' => $labels,
+                'labels' => $all_weeks,
                 'steps_data' => $steps_data,
                 'weight_data' => $weight_data,
                 'year' => $year,
@@ -875,10 +891,25 @@ class CalorieController extends Controller
         // 年の最初の日を取得
         $firstDayOfYear = new DateTime($dateTime->format('Y') . '-01-01');
 
-        // 最初の週の開始日（1月1日）を基準に週番号を計算
-        $weekNumber = ceil(($dateTime->format('z') + 1) / 7);
+        // 年初からの経過日数を取得（0始まり）
+        $dayOfYear = $dateTime->format('z');
 
-        return $weekNumber - 1; // 0始まりにするために1を引く
+        // 年初の曜日を取得（0:日曜日 ～ 6:土曜日）
+        $firstDayOfWeek = (int) $firstDayOfYear->format('w');
+
+        // 最初の日曜日までの日数を調整
+        if ($firstDayOfWeek > 0) {
+            // 年初が日曜日以外の場合、次の日曜日までを第0週とする
+            $daysUntilFirstSunday = 7 - $firstDayOfWeek;
+            if ($dayOfYear < $daysUntilFirstSunday) {
+                return 0;
+            }
+            $dayOfYear -= $daysUntilFirstSunday;
+            return floor($dayOfYear / 7) + 1;
+        } else {
+            // 年初が日曜日の場合
+            return floor($dayOfYear / 7);
+        }
     }
 
     /**
@@ -928,5 +959,35 @@ class CalorieController extends Controller
             ->get();
 
         return response()->json($maxDistance);
+    }
+
+    // 週番号計算用のヘルパーメソッドを追加
+    private function calculateWeekNumber($date)
+    {
+        // DateTimeオブジェクトを作成
+        $dateTime = new DateTime($date);
+
+        // 年の最初の日を取得
+        $firstDayOfYear = new DateTime($dateTime->format('Y') . '-01-01');
+
+        // 年初からの経過日数を取得（0始まり）
+        $dayOfYear = $dateTime->format('z');
+
+        // 年初の曜日を取得（0:日曜日 ～ 6:土曜日）
+        $firstDayOfWeek = (int) $firstDayOfYear->format('w');
+
+        // 最初の日曜日までの日数を調整
+        if ($firstDayOfWeek > 0) {
+            // 年初が日曜日以外の場合、次の日曜日までを第0週とする
+            $daysUntilFirstSunday = 7 - $firstDayOfWeek;
+            if ($dayOfYear < $daysUntilFirstSunday) {
+                return 0;
+            }
+            $dayOfYear -= $daysUntilFirstSunday;
+            return floor($dayOfYear / 7) + 1;
+        } else {
+            // 年初が日曜日の場合
+            return floor($dayOfYear / 7);
+        }
     }
 }
