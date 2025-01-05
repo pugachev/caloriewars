@@ -10,7 +10,6 @@ use App\Models\Physical_data;
 use DateTime;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CalorieController extends Controller
@@ -405,53 +404,59 @@ class CalorieController extends Controller
      * 第x週の合計折れ線グラフを作成
      * 摂取カロリーと確定体重
      */
-    public function makegraph(Request $request)
+    public function makegraph()
     {
+        try {
+            $currentYear = date('Y');
 
-        // (A) 週単位でカロリー接収データを集める
-        $results = DB::table('calories')
-            ->selectRaw("sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week")
-            ->where('tgtcategory', '!=', '106')
-            ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [date('Y')])
-            ->groupBy("week")->get();
+            // (A) 週単位でカロリー接収データを集める
+            $results = DB::table('calories')
+                ->selectRaw("sum(tgtcalorie) as weeksum, FLOOR((DAYOFYEAR(tgtdate) - 1) / 7) as week")
+                ->where('tgtcategory', '!=', '106')
+                ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [$currentYear])
+                ->groupBy("week")->get();
 
-        // 横軸に表示する第x週ラベル
-        $labels = array();
-        // 第x週のカロリー合計値
-        $weeksum = array();
-        foreach ($results as $result) {
-            // labelの追加
-            array_push($labels, $result->week);
-            array_push($weeksum, $result->weeksum);
+            // 横軸に表示する第x週ラベル
+            $labels = array();
+            // 第x週のカロリー合計値
+            $weeksum = array();
+            foreach ($results as $result) {
+                // labelの追加
+                array_push($labels, $result->week);
+                array_push($weeksum, $result->weeksum);
+            }
+
+            // (B) 週単位で確定体重データを集める
+            $physical_results = DB::table('physical_datas')
+                ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight, FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week")
+                ->where("tgt_physical_category", "=", "203")
+                ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [$currentYear])
+                ->groupBy("week")->get();
+
+            // 週単位の平均体重を格納する配列
+            $week_avg_weight = array();
+
+            // カロリーの週単位の配列を利用して平均確定配列を0で初期化
+            for ($i = 0; $i < count($labels); $i++) {
+                $week_avg_weight[$i] = 0;
+            }
+
+            // 平均体重の配列に第x週を添え字にして平均体重を格納する
+            foreach ($physical_results as $result) {
+                $week_avg_weight[$result->week] = $result->week_avg_weight;
+            }
+
+            // フィジカルデータ用のカテゴリを集める
+            $categories = DB::table('categories')
+                ->select('cateid', 'catename')
+                ->orderBy('cateid', 'asc')
+                ->get();
+
+            return view('calorie.statics_cal_weight', compact('labels', 'weeksum', 'categories', 'week_avg_weight'));
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return redirect()->route('calorie')->with('error', 'グラフの生成に失敗しました。');
         }
-
-        // (B) 週単位で確定体重データを集める
-        $physical_results = DB::table('physical_datas')
-            ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight,date_format(tgt_physical_date ,'%U') as week")
-            ->where("tgt_physical_category", "=", "203")
-            ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [date('Y')])
-            ->groupBy("week")->get();
-
-        // 週単位の平均体重を格納する配列
-        $week_avg_weight = array();
-
-        // カロリーの週単位の配列を利用して平均確定配列を0で初期化
-        for ($i = 0; $i < count($labels); $i++) {
-            $week_avg_weight[$i] = 0;
-        }
-
-        // 平均体重の配列に第x週を添え字にして平均体重を格納する
-        foreach ($physical_results as $result) {
-            $week_avg_weight[$result->week] = $result->week_avg_weight;
-        }
-
-        // フィジカルデータ用のカテゴリを集める
-        $categories = DB::table('categories')
-            ->select('cateid', 'catename')
-            ->orderBy('cateid', 'asc')
-            ->get();
-
-        return view('calorie.statics_cal_weight', compact('labels', 'weeksum', 'categories', 'week_avg_weight'));
     }
 
     /**
@@ -464,7 +469,11 @@ class CalorieController extends Controller
 
         // (A) 週単位でカロリー接収データを集める
         $results = DB::table('calories')
-            ->selectRaw("sum(tgtcalorie) as weeksum, date_format(tgtdate ,'%U') as week, date_format(tgtdate ,'%Y') as year")
+            ->selectRaw("
+                sum(tgtcalorie) as weeksum,
+                FLOOR((DAYOFYEAR(tgtdate) - 1) / 7) as week,
+                date_format(tgtdate ,'%Y') as year
+            ")
             ->where('tgtcategory', '!=', '106')
             ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [$year])
             ->groupBy("week", "year")->get();
@@ -481,7 +490,11 @@ class CalorieController extends Controller
 
         // (B) 週単位で確定体重データを集める
         $physical_results = DB::table('physical_datas')
-            ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight, date_format(tgt_physical_date ,'%U') as week, date_format(tgt_physical_date ,'%Y') as year")
+            ->selectRaw("
+                round(avg(tgt_physical_data),2) as week_avg_weight,
+                FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                date_format(tgt_physical_date ,'%Y') as year
+            ")
             ->where("tgt_physical_category", "=", "203")
             ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y') = ?", [$year])
             ->groupBy("week", "year")->get();
@@ -520,66 +533,85 @@ class CalorieController extends Controller
      */
     public function makegraph2()
     {
-        $labels = ['2025', '2024', '2023'];
-        return view('calorie.statics_steps_distance', compact('labels'));
+        try {
+            $currentYear = date('Y');
+            $labels = ['2025', '2024', '2023'];
+            return view('calorie.statics_steps_distance', compact('labels'));
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return redirect()->route('calorie')->with('error', 'グラフの生成に失敗しました。');
+        }
     }
 
+    /**
+     * 歩数と歩行距離のAjaxデータ取得
+     */
     public function makegraph2ajax(Request $request)
     {
-        $year = $request->input('year', date('Y'));
-        $user_id = Auth::id();
+        try {
+            $year = $request->input('tgtyear', date('Y'));
 
-        // デバッグ用ログ
-        \Log::info('Fetching data for year: ' . $year);
+            // (A) 週単位で歩数データを集める
+            $steps_results = DB::table('physical_datas')
+                ->selectRaw("
+                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    date_format(tgt_physical_date ,'%Y') as year,
+                    AVG(tgt_physical_data) as avg_steps
+                ")
+                ->where('tgt_physical_category', '=', '201') // 歩数
+                ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
+                ->groupBy('week', 'year')
+                ->orderBy('week')
+                ->get();
 
-        // 歩数データを取得
-        $steps = DB::table('physical_datas')
-            ->where('tgt_physical_category', '201')
-            ->whereYear('tgt_physical_date', $year)
-            ->orderBy('tgt_physical_date', 'asc')
-            ->get();
+            // (B) 週単位で歩行距離データを集める
+            $distance_results = DB::table('physical_datas')
+                ->selectRaw("
+                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    date_format(tgt_physical_date ,'%Y') as year,
+                    AVG(tgt_physical_data) as avg_distance
+                ")
+                ->where('tgt_physical_category', '=', '202') // 歩行距離
+                ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
+                ->groupBy('week', 'year')
+                ->orderBy('week')
+                ->get();
 
-        \Log::info('Steps data count: ' . $steps->count());
+            // データを整形
+            $labels = [];
+            $steps_data = [];
+            $distance_data = [];
 
-        // 歩行距離データを取得
-        $distances = DB::table('physical_datas')
-            ->where('tgt_physical_category', '202')
-            ->whereYear('tgt_physical_date', $year)
-            ->orderBy('tgt_physical_date', 'asc')
-            ->get();
-
-        // データを結合して整形
-        $result = [];
-        $dates = [];
-
-        foreach ($steps as $step) {
-            $date = $step->tgt_physical_date;
-            if (!isset($result[$date])) {
-                $result[$date] = [
-                    'target_date' => $date,
-                    'steps' => 0,
-                    'distance' => 0,
-                ];
+            // 歩数データの処理
+            foreach ($steps_results as $result) {
+                array_push($labels, $result->week);
+                array_push($steps_data, round($result->avg_steps, 2));
             }
-            $result[$date]['steps'] = $step->tgt_physical_data;
-        }
 
-        foreach ($distances as $distance) {
-            $date = $distance->tgt_physical_date;
-            if (!isset($result[$date])) {
-                $result[$date] = [
-                    'target_date' => $date,
-                    'steps' => 0,
-                    'distance' => 0,
-                ];
+            // 歩行距離データの配列を初期化
+            for ($i = 0; $i < count($labels); $i++) {
+                $distance_data[$i] = 0;
             }
-            $result[$date]['distance'] = $distance->tgt_physical_data;
+
+            // 歩行距離データの処理
+            foreach ($distance_results as $result) {
+                if (in_array($result->week, $labels)) {
+                    $index = array_search($result->week, $labels);
+                    $distance_data[$index] = round($result->avg_distance, 2);
+                }
+            }
+
+            return response()->json([
+                'labels' => $labels,
+                'steps_data' => $steps_data,
+                'distance_data' => $distance_data,
+                'year' => $year,
+            ]);
+
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return response()->json(['error' => 'データの取得に失敗しました。'], 500);
         }
-
-        // 日付でソート
-        ksort($result);
-
-        return response()->json(array_values($result));
     }
 
     /**
@@ -594,58 +626,75 @@ class CalorieController extends Controller
 
     public function makegraph3ajax(Request $request)
     {
-        $year = $request->input('year', date('Y'));
+        try {
+            $year = $request->input('tgtyear', date('Y'));
 
-        // 歩数データを取得
-        $steps = DB::table('physical_datas')
-            ->where('tgt_physical_category', '201')
-            ->whereYear('tgt_physical_date', $year)
-            ->orderBy('tgt_physical_date', 'asc')
-            ->get();
+            // (A) 週単位で歩数データを集める
+            $steps_results = DB::table('physical_datas')
+                ->selectRaw("
+                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    date_format(tgt_physical_date ,'%Y') as year,
+                    AVG(tgt_physical_data) as avg_steps
+                ")
+                ->where('tgt_physical_category', '=', '201') // 歩数
+                ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
+                ->groupBy('week', 'year')
+                ->orderBy('week')
+                ->get();
 
-        // 歩行時間データを取得
-        $times = DB::table('physical_datas')
-            ->where('tgt_physical_category', '200')
-            ->whereYear('tgt_physical_date', $year)
-            ->orderBy('tgt_physical_date', 'asc')
-            ->get();
+            // (B) 週単位で歩行時間データを集める
+            $time_results = DB::table('physical_datas')
+                ->selectRaw("
+                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    date_format(tgt_physical_date ,'%Y') as year,
+                    AVG(tgt_physical_data) as avg_time
+                ")
+                ->where('tgt_physical_category', '=', '200') // 歩行時間
+                ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
+                ->groupBy('week', 'year')
+                ->orderBy('week')
+                ->get();
 
-        // データを結合して整形
-        $result = [];
+            // データを整形
+            $labels = [];
+            $steps_data = [];
+            $time_data = [];
 
-        foreach ($steps as $step) {
-            $date = $step->tgt_physical_date;
-            if (!isset($result[$date])) {
-                $result[$date] = [
-                    'target_date' => $date,
-                    'steps' => 0,
-                    'time' => 0,
-                ];
+            // 歩数データの処理
+            foreach ($steps_results as $result) {
+                array_push($labels, $result->week);
+                array_push($steps_data, round($result->avg_steps, 2));
             }
-            $result[$date]['steps'] = $step->tgt_physical_data;
-        }
 
-        foreach ($times as $time) {
-            $date = $time->tgt_physical_date;
-            if (!isset($result[$date])) {
-                $result[$date] = [
-                    'target_date' => $date,
-                    'steps' => 0,
-                    'time' => 0,
-                ];
+            // 歩行時間データの配列を初期化
+            for ($i = 0; $i < count($labels); $i++) {
+                $time_data[$i] = 0;
             }
-            $result[$date]['time'] = $time->tgt_physical_data;
+
+            // 歩行時間データの処理
+            foreach ($time_results as $result) {
+                if (in_array($result->week, $labels)) {
+                    $index = array_search($result->week, $labels);
+                    $time_data[$index] = round($result->avg_time, 2);
+                }
+            }
+
+            return response()->json([
+                'labels' => $labels,
+                'steps_data' => $steps_data,
+                'time_data' => $time_data,
+                'year' => $year,
+            ]);
+
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return response()->json(['error' => 'データの取得に失敗しました。'], 500);
         }
-
-        // 日付でソート
-        ksort($result);
-
-        return response()->json(array_values($result));
     }
 
     /**
      * 第x週の合計折れ線グラフを作成
-     * 歩数と確定体重
+     * 歩数と歩行時間
      */
     public function makegraph4()
     {
@@ -655,85 +704,69 @@ class CalorieController extends Controller
 
     public function makegraph4ajax(Request $request)
     {
-        if (!Auth::check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $year = $request->input('year', date('Y'));
-        \Log::info('makegraph4ajax called with year: ' . $year);
-
         try {
-            // 歩数データを取得
-            $steps_query = DB::table('physical_datas')
-                ->where('tgt_physical_category', '201')
-                ->whereYear('tgt_physical_date', $year)
-                ->orderBy('tgt_physical_date', 'asc');
+            $year = $request->input('tgtyear', date('Y'));
 
-            \Log::info('Steps query: ' . $steps_query->toSql());
-            \Log::info('Steps query bindings: ' . json_encode($steps_query->getBindings()));
+            // (A) 週単位で歩数データを集める
+            $steps_results = DB::table('physical_datas')
+                ->selectRaw("
+                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    date_format(tgt_physical_date ,'%Y') as year,
+                    AVG(tgt_physical_data) as avg_steps
+                ")
+                ->where('tgt_physical_category', '=', '201') // 歩数
+                ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
+                ->groupBy('week', 'year')
+                ->orderBy('week')
+                ->get();
 
-            $steps = $steps_query->get();
-            \Log::info('Steps data count: ' . $steps->count());
-            if ($steps->count() > 0) {
-                \Log::info('Sample step data: ' . json_encode($steps->first()));
+            // (B) 週単位で確定体重データを集める
+            $weight_results = DB::table('physical_datas')
+                ->selectRaw("
+                    FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week,
+                    date_format(tgt_physical_date ,'%Y') as year,
+                    AVG(tgt_physical_data) as avg_weight
+                ")
+                ->where('tgt_physical_category', '=', '203') // 確定体重
+                ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
+                ->groupBy('week', 'year')
+                ->orderBy('week')
+                ->get();
+
+            // データを整形
+            $labels = [];
+            $steps_data = [];
+            $weight_data = [];
+
+            // 歩数データの処理
+            foreach ($steps_results as $result) {
+                array_push($labels, $result->week);
+                array_push($steps_data, round($result->avg_steps, 2));
             }
 
-            // 確定体重データを取得
-            $weights_query = DB::table('physical_datas')
-                ->where('tgt_physical_category', '203')
-                ->whereYear('tgt_physical_date', $year)
-                ->orderBy('tgt_physical_date', 'asc');
-
-            \Log::info('Weights query: ' . $weights_query->toSql());
-            \Log::info('Weights query bindings: ' . json_encode($weights_query->getBindings()));
-
-            $weights = $weights_query->get();
-            \Log::info('Weights data count: ' . $weights->count());
-            if ($weights->count() > 0) {
-                \Log::info('Sample weight data: ' . json_encode($weights->first()));
+            // 確定体重データの配列を初期化
+            for ($i = 0; $i < count($labels); $i++) {
+                $weight_data[$i] = 0;
             }
 
-            // データを結合して整形
-            $result = [];
-
-            foreach ($steps as $step) {
-                $date = $step->tgt_physical_date;
-                if (!isset($result[$date])) {
-                    $result[$date] = [
-                        'target_date' => $date,
-                        'steps' => 0,
-                        'weight' => 0,
-                    ];
+            // 確定体重データの処理
+            foreach ($weight_results as $result) {
+                if (in_array($result->week, $labels)) {
+                    $index = array_search($result->week, $labels);
+                    $weight_data[$index] = round($result->avg_weight, 2);
                 }
-                $result[$date]['steps'] = $step->tgt_physical_data;
             }
 
-            foreach ($weights as $weight) {
-                $date = $weight->tgt_physical_date;
-                if (!isset($result[$date])) {
-                    $result[$date] = [
-                        'target_date' => $date,
-                        'steps' => 0,
-                        'weight' => 0,
-                    ];
-                }
-                $result[$date]['weight'] = $weight->tgt_physical_data;
-            }
+            return response()->json([
+                'labels' => $labels,
+                'steps_data' => $steps_data,
+                'weight_data' => $weight_data,
+                'year' => $year,
+            ]);
 
-            // 日付でソート
-            ksort($result);
-
-            $final_result = array_values($result);
-            \Log::info('Final result count: ' . count($final_result));
-            if (count($final_result) > 0) {
-                \Log::info('Sample final result: ' . json_encode($final_result[0]));
-            }
-
-            return response()->json($final_result);
-        } catch (\Exception $e) {
-            \Log::error('Error in makegraph4ajax: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
-            return response()->json(['error' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return response()->json(['error' => 'データの取得に失敗しました。'], 500);
         }
     }
 
@@ -839,19 +872,13 @@ class CalorieController extends Controller
         // DateTimeオブジェクトを作成
         $dateTime = new DateTime($date);
 
-        // 年の始まりを取得
-        $yearStart = new DateTime($dateTime->format('Y') . '-01-01');
+        // 年の最初の日を取得
+        $firstDayOfYear = new DateTime($dateTime->format('Y') . '-01-01');
 
-        // 日曜日を1週の始まりとするため、週番号の計算においてサンデースタートを設定
-        $weekNumber = (int) $dateTime->format('W');
-        $dayOfWeek = (int) $dateTime->format('w'); // 日曜日が0
+        // 最初の週の開始日（1月1日）を基準に週番号を計算
+        $weekNumber = ceil(($dateTime->format('z') + 1) / 7);
 
-        // 1月1日が日曜日でない場合、1週目の調整
-        if ($dayOfWeek != 0) {
-            $weekNumber--;
-        }
-
-        return $weekNumber;
+        return $weekNumber - 1; // 0始まりにするために1を引く
     }
 
     /**
