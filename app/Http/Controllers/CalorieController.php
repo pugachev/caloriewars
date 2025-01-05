@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\DB;
 
 class CalorieController extends Controller
 {
+    public function __construct()
+    {
+        // ログイン認証のミドルウェアをコメントアウト
+        // $this->middleware('auth');
+    }
+
     /**
      * Display a listing of the resource.
      *

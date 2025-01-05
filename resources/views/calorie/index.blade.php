@@ -92,6 +92,9 @@ foreach($physical_categories as $val){
                                     <span style="color: {{ $result->weekday == '日' ? 'red' : ($result->weekday == '土' ? 'blue' : 'inherit') }};">
                                         ({{ $result->weekday }})
                                     </span>
+                                    @if($result->has_tgtcategory_104)
+                                        <img src="{{ asset('img/beer.png') }}" alt="アルコール" style="width: 20px; height: 20px; margin-left: 5px;">
+                                    @endif
                                 </td>
                                 <td style="text-align: center;">{{ $result->sumcolorie }}</td>
                                 <td style="text-align: center;">{{ $result->walking_time }}</td>

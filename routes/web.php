@@ -17,8 +17,8 @@ Route::get('/', function () {
     return redirect('/calorie');
 });
 
-// 認証が必要なルートをグループ化
-Route::middleware(['web', 'auth'])->group(function () {
+// ルートの定義
+Route::group([], function () {
     Route::get('/calorie', [CalorieController::class, 'index'])->name('calorie');
     Route::get('/calorie/show/{tgtdate}', [CalorieController::class, 'show'])->name('calorie.show');
     Route::get('/calorie/showphysical/{tgtdate}', [CalorieController::class, 'showphysical'])->name('calorie.showphysical');
@@ -49,5 +49,3 @@ Route::middleware(['web', 'auth'])->group(function () {
 Route::get('/max-calorie', [CalorieController::class, 'getMaxColorie'])->name('calorie.max');
 Route::get('/max-steps', [CalorieController::class, 'getMaxSteps'])->name('calorie.steps');
 Route::get('/max-distance', [CalorieController::class, 'getMaxDistance'])->name('calorie.distance');
-
-Auth::routes();
