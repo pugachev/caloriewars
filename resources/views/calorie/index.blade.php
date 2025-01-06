@@ -74,23 +74,23 @@ foreach($physical_categories as $val){
                 <table class="table table-hover table-sm table-bordered" style="border-collapse: collapse;">
                     <thead>
                         <tr>
-                            <th style="width: 8%; text-align: center;">週番号</th>
-                            <th style="width: 8%; text-align: center;">日付</th>
-                            <th style="width: 10%; text-align: center;">摂取熱量合計</th>
-                            <th style="width: 8%; text-align: center;">歩行時間</th>
-                            <th style="width: 8%; text-align: center;">歩数</th>
-                            <th style="width: 8%; text-align: center;">歩行距離</th>
-                            <th style="width: 8%; text-align: center;">確定体重</th>
-                            <th style="width: 8%; text-align: center;">確定熱量</th>
-                            <th style="width: 12%; text-align: center;">熱量詳細</th>
-                            <th style="width: 12%; text-align: center;">運動詳細</th>
+                            <th class="text-center d-none d-md-table-cell">週番号</th>
+                            <th class="text-center">日付</th>
+                            <th class="text-center d-none d-lg-table-cell">摂取熱量合計</th>
+                            <th class="text-center d-none d-xl-table-cell">歩行時間</th>
+                            <th class="text-center d-none d-xl-table-cell">歩数</th>
+                            <th class="text-center d-none d-xl-table-cell">歩行距離</th>
+                            <th class="text-center d-none d-lg-table-cell">確定体重</th>
+                            <th class="text-center d-none d-lg-table-cell">確定熱量</th>
+                            <th class="text-center">熱量詳細</th>
+                            <th class="text-center">運動詳細</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($paginatedItems as $result)
                             <tr>
-                                <td style="text-align: center;">{{ $result->weeknum }}</td>
-                                <td style="text-align: left;">
+                                <td class="text-center d-none d-md-table-cell">{{ $result->weeknum }}</td>
+                                <td class="text-left">
                                     {{ date('Y-m-d', strtotime($result->tgtdate)) }}
                                     <span style="color: {{ $result->weekday == '日' ? 'red' : ($result->weekday == '土' ? 'blue' : 'inherit') }};">
                                         ({{ $result->weekday }})
@@ -99,18 +99,18 @@ foreach($physical_categories as $val){
                                         <img src="{{ asset('img/beer.png') }}" alt="アルコール" style="width: 20px; height: 20px; margin-left: 5px;">
                                     @endif
                                 </td>
-                                <td style="text-align: center;">{{ $result->sumcolorie }}</td>
-                                <td style="text-align: center;">{{ $result->walking_time }}</td>
-                                <td style="text-align: center;">{{ $result->walking_steps }}</td>
-                                <td style="text-align: center;">{{ $result->walking_distance }}</td>
-                                <td style="text-align: center;">{{ $result->confirmed_weight }}</td>
-                                <td style="text-align: center;">{{ $result->confirmed_calorie }}</td>
-                                <td style="text-align: center;">
+                                <td class="text-center d-none d-lg-table-cell">{{ $result->sumcolorie }}</td>
+                                <td class="text-center d-none d-xl-table-cell">{{ $result->walking_time }}</td>
+                                <td class="text-center d-none d-xl-table-cell">{{ $result->walking_steps }}</td>
+                                <td class="text-center d-none d-xl-table-cell">{{ $result->walking_distance }}</td>
+                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_weight }}</td>
+                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_calorie }}</td>
+                                <td class="text-center">
                                     <a class="btn btn-primary btn-md" href="{{ url('/calorie/show/'.$result->tgtdate) }}">
                                         熱量詳細
                                     </a>
                                 </td>
-                                <td style="text-align: center;">
+                                <td class="text-center">
                                     <a class="btn btn-success btn-md" href="{{ url('/calorie/showphysical/'.$result->tgtdate) }}">
                                         運動詳細
                                     </a>
