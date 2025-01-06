@@ -30,30 +30,33 @@ foreach($physical_categories as $val){
     <div><h4><small>目標:<strong>1450kcal</strong></small></h4></div>
 </div>
 
-<!-- タブナビゲーション -->
-<ul class="nav nav-tabs" id="yearTabs" role="tablist">
-    @foreach ($yearlyData as $year => $items)
-        <li class="nav-item">
-            <a class="nav-link {{
-                    (request()->has('page_'.$year) ||
-                    (!request()->hasAny(array_map(function($y) { return 'page_'.$y; }, array_keys($yearlyData))) && $year == date('Y')))
-                    ? 'active' : ''
-                }}"
-               id="y{{ $year }}-tab"
-               data-toggle="tab"
-               href="#y{{ $year }}"
-               role="tab"
-               aria-controls="y{{ $year }}"
-               aria-selected="{{
-                    (request()->has('page_'.$year) ||
-                    (!request()->hasAny(array_map(function($y) { return 'page_'.$y; }, array_keys($yearlyData))) && $year == date('Y')))
-                    ? 'true' : 'false'
-                }}">
-                {{ $year }}年
-            </a>
-        </li>
-    @endforeach
-</ul>
+<!-- タブ全体をpx-5で囲む -->
+<div class="px-5">
+    <!-- タブナビゲーション -->
+    <ul class="nav nav-tabs" id="yearTabs" role="tablist">
+        @foreach ($yearlyData as $year => $items)
+            <li class="nav-item">
+                <a class="nav-link {{
+                        (request()->has('page_'.$year) ||
+                        (!request()->hasAny(array_map(function($y) { return 'page_'.$y; }, array_keys($yearlyData))) && $year == date('Y')))
+                        ? 'active' : ''
+                    }}"
+                   id="y{{ $year }}-tab"
+                   data-toggle="tab"
+                   href="#y{{ $year }}"
+                   role="tab"
+                   aria-controls="y{{ $year }}"
+                   aria-selected="{{
+                        (request()->has('page_'.$year) ||
+                        (!request()->hasAny(array_map(function($y) { return 'page_'.$y; }, array_keys($yearlyData))) && $year == date('Y')))
+                        ? 'true' : 'false'
+                    }}">
+                    {{ $year }}年
+                </a>
+            </li>
+        @endforeach
+    </ul>
+</div>
 
 <!-- タブコンテンツ -->
 <div class="tab-content" id="yearTabContent">
@@ -67,12 +70,12 @@ foreach($physical_categories as $val){
              role="tabpanel"
              aria-labelledby="y{{ $year }}-tab">
 
-            <div class="table-responsive">
-                <table class="table table-hover table-sm">
+            <div class="table-responsive px-5">
+                <table class="table table-hover table-sm table-bordered" style="border-collapse: collapse;">
                     <thead>
                         <tr>
                             <th style="width: 8%; text-align: center;">週番号</th>
-                            <th style="width: 15%; text-align: center;">日付</th>
+                            <th style="width: 8%; text-align: center;">日付</th>
                             <th style="width: 10%; text-align: center;">摂取熱量合計</th>
                             <th style="width: 8%; text-align: center;">歩行時間</th>
                             <th style="width: 8%; text-align: center;">歩数</th>
@@ -87,7 +90,7 @@ foreach($physical_categories as $val){
                         @foreach ($paginatedItems as $result)
                             <tr>
                                 <td style="text-align: center;">{{ $result->weeknum }}</td>
-                                <td style="text-align: center;">
+                                <td style="text-align: left;">
                                     {{ date('Y-m-d', strtotime($result->tgtdate)) }}
                                     <span style="color: {{ $result->weekday == '日' ? 'red' : ($result->weekday == '土' ? 'blue' : 'inherit') }};">
                                         ({{ $result->weekday }})
@@ -103,12 +106,12 @@ foreach($physical_categories as $val){
                                 <td style="text-align: center;">{{ $result->confirmed_weight }}</td>
                                 <td style="text-align: center;">{{ $result->confirmed_calorie }}</td>
                                 <td style="text-align: center;">
-                                    <a class="btn btn-primary btn-sm" href="{{ url('/calorie/show/'.$result->tgtdate) }}">
+                                    <a class="btn btn-primary btn-md" href="{{ url('/calorie/show/'.$result->tgtdate) }}">
                                         熱量詳細
                                     </a>
                                 </td>
                                 <td style="text-align: center;">
-                                    <a class="btn btn-success btn-sm" href="{{ url('/calorie/showphysical/'.$result->tgtdate) }}">
+                                    <a class="btn btn-success btn-md" href="{{ url('/calorie/showphysical/'.$result->tgtdate) }}">
                                         運動詳細
                                     </a>
                                 </td>
