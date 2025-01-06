@@ -17,36 +17,29 @@
     }
 ?>
 
-<div class="mx-auto col-12" style="text-align:center;">
-    <div><h3>カロリー週計 x 週平均体重</h3></div>
-</div>
-<div class="mx-auto col-12 d-flex flex-row justify-content-center">
-    <div class="mr-2"><h4><small>目標:<strong>1600kcal</strong></small></h4></div>
-  </div>
-<div class="mx-auto col-12" style="text-align:center;">
-    <div class="container">
-        <div class="row">
-            <div class="container" style="text-align:center;">
-                <!-- <canvas id="lineChart"></canvas> -->
-                <p id="tabcontrol">
-                    <a href="#tabpage1">2025</a>
-                    <a href="#tabpage2">2024</a>
-                    <a href="#tabpage3">2023</a>
-                </p>
-                <div id="tabbody">
-                    <div id="tabpage1" style="display:none;">
-                        <canvas id="lineChart2025"></canvas>
-                    </div>
-                    <div id="tabpage2" style="display:none;">
-                        <canvas id="lineChart2024"></canvas>
-                    </div>
-                    <div id="tabpage3" style="display:none;">
-                        <canvas id="lineChart2023"></canvas>
-                    </div>
-                </div>
-              </div>
-              <canvas id="lineChart"></canvas>
-            </div>
+<div class="container-fluid" style="width: 70%; margin: 0 auto;">
+    <h2 class="text-center">カロリー週計 x 週平均体重</h2>
+    <div class="text-center mb-3">
+        <h4><small>目標:<strong>1600kcal</strong></small></h4>
+    </div>
+
+    <!-- タブコントロール -->
+    <div id="tabcontrol">
+        <a href="#tabpage1">2025</a>
+        <a href="#tabpage2">2024</a>
+        <a href="#tabpage3">2023</a>
+    </div>
+
+    <!-- タブの内容 -->
+    <div id="tabbody">
+        <div id="tabpage1" style="display:none;">
+            <canvas id="lineChart2025"></canvas>
+        </div>
+        <div id="tabpage2" style="display:none;">
+            <canvas id="lineChart2024"></canvas>
+        </div>
+        <div id="tabpage3" style="display:none;">
+            <canvas id="lineChart2023"></canvas>
         </div>
     </div>
 </div>
@@ -101,7 +94,7 @@
     let lineChart2025 = null;  // 2025年のグラフ
     let lineChart2024 = null;  // 2024年のグラフ
     let lineChart2023 = null;  // 2023年のグラフ
-    
+
     // タブを左端に寄せるためのスタイルを追加
     $('#tabcontrol').css({
         'text-align': 'left',
@@ -115,7 +108,7 @@
         event.preventDefault();
         var targetId = $(this).attr('href').replace('#', '');
         var param1;
-        
+
         // タブに応じて年を設定
         switch(targetId) {
             case 'tabpage1':
@@ -138,7 +131,7 @@
         $(this).addClass('active');
 
         $.ajax({
-            url: '{{ route('calorie.makegraphajax') }}', // 正し��ルート名を使用
+            url: '{{ route('calorie.makegraphajax') }}', // 正しルート名を使用
             method: 'GET',
             dataType: 'json',
             data: { tgtyear: param1},
@@ -156,7 +149,7 @@
                         canvasId = "lineChart2023";
                         break;
                 }
-                
+
                 let lineCtx = document.getElementById(canvasId).getContext('2d');
                 // 線グラフの設定
                 let lineConfig = {

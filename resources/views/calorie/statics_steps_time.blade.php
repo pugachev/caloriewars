@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container-fluid" style="width: 70%; margin: 0 auto;">
     <h2>歩数と歩行時間</h2>
 
     <!-- タブナビゲーション -->
