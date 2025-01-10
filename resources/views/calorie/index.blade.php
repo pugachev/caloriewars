@@ -106,12 +106,12 @@ foreach($physical_categories as $val){
                                 <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_weight }}</td>
                                 <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_calorie }}</td>
                                 <td class="text-center">
-                                    <a class="btn btn-primary btn-md" href="{{ url('/calorie/show/'.$result->tgtdate) }}">
+                                    <a class="btn btn-primary btn-sm" href="{{ url('/calorie/show/'.$result->tgtdate) }}">
                                         熱量詳細
                                     </a>
                                 </td>
                                 <td class="text-center">
-                                    <a class="btn btn-success btn-md" href="{{ url('/calorie/showphysical/'.$result->tgtdate) }}">
+                                    <a class="btn btn-success btn-sm" href="{{ url('/calorie/showphysical/'.$result->tgtdate) }}">
                                         運動詳細
                                     </a>
                                 </td>
