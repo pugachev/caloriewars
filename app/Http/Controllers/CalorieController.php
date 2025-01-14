@@ -751,7 +751,7 @@ class CalorieController extends Controller
                         ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
                     END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
-                    SUM(tgt_physical_data) / 7 as avg_weight  -- 7で割って週平均を計算
+                    SUM(tgt_physical_data) / COUNT(*) as avg_weight  -- データ個数で割って平均を計算
                 ")
                 ->where('tgt_physical_category', '=', '203') // 確定体重
                 ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
