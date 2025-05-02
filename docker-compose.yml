@@ -30,10 +30,10 @@ services:
       - db_data:/var/lib/mysql
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    image: arm64v8/phpmyadmin
     container_name: caloriewars-phpmyadmin
     ports:
-      - "8081:80"
+      - "8082:80"
     environment:
       PMA_HOST: db
       MYSQL_ROOT_PASSWORD: root
