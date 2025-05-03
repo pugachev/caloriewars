@@ -31,9 +31,9 @@ Route::group([], function () {
 
     // Ajax関連のルート
     Route::get('/calorie/makegraphajax', [CalorieController::class, 'makegraphajax'])->name('calorie.makegraphajax');
-    Route::get('/calorie/makegraph2ajax', [CalorieController::class, 'makegraph2ajax'])->name('makegraph2ajax');
-    Route::get('/calorie/makegraph3ajax', [CalorieController::class, 'makegraph3ajax'])->name('makegraph3ajax');
-    Route::get('/calorie/makegraph4ajax', [CalorieController::class, 'makegraph4ajax'])->name('makegraph4ajax');
+    Route::get('/calorie/makegraph2ajax', [CalorieController::class, 'makegraph2ajax'])->name('calorie.makegraph2ajax');
+    Route::get('/calorie/makegraph3ajax', [CalorieController::class, 'makegraph3ajax'])->name('calorie.makegraph3ajax');
+    Route::get('/calorie/makegraph4ajax', [CalorieController::class, 'makegraph4ajax'])->name('calorie.makegraph4ajax');
 
     // その他のルート
     Route::get('/calorie/chartgraph', [CalorieController::class, 'chartgraph'])->name('calorie.chartgraph');
