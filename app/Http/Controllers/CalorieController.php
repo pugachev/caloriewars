@@ -572,7 +572,7 @@ class CalorieController extends Controller
                         ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
                     END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
-                    AVG(tgt_physical_data) as avg_steps
+                    SUM(tgt_physical_data) / 7 as avg_steps  -- 7で割って週平均を計算
                 ")
                 ->where('tgt_physical_category', '=', '201') // 歩数
                 ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
@@ -589,7 +589,7 @@ class CalorieController extends Controller
                         ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
                     END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
-                    AVG(tgt_physical_data) as avg_distance
+                    SUM(tgt_physical_data) / 7 as avg_distance  -- 7日で割って週平均を計算
                 ")
                 ->where('tgt_physical_category', '=', '202') // 歩行距離
                 ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
@@ -653,7 +653,7 @@ class CalorieController extends Controller
                         ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
                     END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
-                    AVG(tgt_physical_data) as avg_steps
+                    SUM(tgt_physical_data) / 7 as avg_steps  -- 7で割って週平均を計算
                 ")
                 ->where('tgt_physical_category', '=', '201') // 歩数
                 ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
@@ -670,7 +670,7 @@ class CalorieController extends Controller
                         ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
                     END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
-                    AVG(tgt_physical_data) as avg_time
+                    SUM(tgt_physical_data) / 7 as avg_time  -- 7で割って週平均を計算
                 ")
                 ->where('tgt_physical_category', '=', '200') // 歩行時間
                 ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
@@ -734,7 +734,7 @@ class CalorieController extends Controller
                         ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
                     END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
-                    AVG(tgt_physical_data) as avg_steps
+                    SUM(tgt_physical_data) / 7 as avg_steps  -- 7で割って週平均を計算
                 ")
                 ->where('tgt_physical_category', '=', '201') // 歩数
                 ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])
@@ -751,7 +751,7 @@ class CalorieController extends Controller
                         ELSE FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7)
                     END as week,
                     date_format(tgt_physical_date ,'%Y') as year,
-                    AVG(tgt_physical_data) as avg_weight
+                    SUM(tgt_physical_data) / COUNT(*) as avg_weight  -- データ個数で割って平均を計算
                 ")
                 ->where('tgt_physical_category', '=', '203') // 確定体重
                 ->whereRaw("DATE_FORMAT(tgt_physical_date,'%Y') = ?", [$year])

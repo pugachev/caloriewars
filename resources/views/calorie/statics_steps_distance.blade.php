@@ -103,7 +103,7 @@ $(document).ready(function() {
 
 function loadData(year) {
     $.ajax({
-        url: '{{ route('makegraph2ajax') }}',
+        url: '{{ route('calorie.makegraph2ajax') }}',
         method: 'GET',
         data: { tgtyear: year },
         success: function(data) {
