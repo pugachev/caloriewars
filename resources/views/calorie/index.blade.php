@@ -77,11 +77,12 @@ foreach($physical_categories as $val){
                             <th class="text-center d-none d-md-table-cell">週番号</th>
                             <th class="text-center">日付</th>
                             <th class="text-center d-none d-lg-table-cell">摂取熱量合計</th>
-                            <th class="text-center d-none d-xl-table-cell">歩行時間</th>
-                            <th class="text-center d-none d-xl-table-cell">歩数</th>
-                            <th class="text-center d-none d-xl-table-cell">歩行距離</th>
+                            <th class="text-center">歩行時間</th>
+                            <th class="text-center">歩数</th>
+                            <th class="text-center">歩行距離</th>
                             <th class="text-center d-none d-lg-table-cell">確定体重</th>
                             <th class="text-center d-none d-lg-table-cell">確定熱量</th>
+                            <th class="text-center">ステッパー</th>
                             <th class="text-center">熱量詳細</th>
                             <th class="text-center">運動詳細</th>
                         </tr>
@@ -100,11 +101,12 @@ foreach($physical_categories as $val){
                                     @endif
                                 </td>
                                 <td class="text-center d-none d-lg-table-cell">{{ $result->sumcolorie }}</td>
-                                <td class="text-center d-none d-xl-table-cell">{{ $result->walking_time }}</td>
-                                <td class="text-center d-none d-xl-table-cell">{{ $result->walking_steps }}</td>
-                                <td class="text-center d-none d-xl-table-cell">{{ $result->walking_distance }}</td>
+                                <td class="text-center">{{ $result->walking_time }}</td>
+                                <td class="text-center">{{ $result->walking_steps }}</td>
+                                <td class="text-center">{{ $result->walking_distance }}</td>
                                 <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_weight }}</td>
                                 <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_calorie }}</td>
+                                <td class="text-center">{{ $result->stepper_count }}</td>
                                 <td class="text-center">
                                     <a class="btn btn-primary btn-sm" href="{{ url('/calorie/show/'.$result->tgtdate) }}">
                                         熱量詳細

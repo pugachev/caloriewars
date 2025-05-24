@@ -59,7 +59,13 @@ foreach($physical_categories as $val){
                     echo '<tr>';
                     echo '<td>' . date('Y-m-d',strtotime($result->tgt_physical_date)).'</td>';
                     echo '<td>' . $result->physical_catename.'</td>';
-                    echo '<td class="text-center">'.$result->tgt_physical_data.'</td>';
+                    echo '<td class="text-center">';
+                    if ($result->physical_cateid == 205) { // ステッパーの場合
+                        echo $result->tgt_physical_data . ' 分';
+                    } else {
+                        echo $result->tgt_physical_data;
+                    }
+                    echo '</td>';
                     echo '<td class="text-center">';
                     echo '<button type="button" class="btn btn-primary" data-toggle="modal" onclick="row_updatedata(this)" data-id="'.$result->id.'"data-target="#dataUpdate" data-tgt_physical_date="'.date('Y-m-d',strtotime($result->tgt_physical_date)).'" data-tgt_physical_category="'.$result->tgt_physical_category .'" data-tgt_physical_data="'.$result->tgt_physical_data.'">';
                     echo '編集';

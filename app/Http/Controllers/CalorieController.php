@@ -56,6 +56,7 @@ class CalorieController extends Controller
             $result->walking_distance  = 0;
             $result->confirmed_weight  = 0;
             $result->confirmed_calorie = 0;
+            $result->stepper_count     = 0;  // ステッパー数を追加
 
             // 該当日の運動量データを取得
             $physical_results = DB::table('physical_datas')
@@ -81,6 +82,9 @@ class CalorieController extends Controller
                             break;
                         case 204: // 確定熱量
                             $result->confirmed_calorie = $val->tgt_physical_data;
+                            break;
+                        case 205: // ステッパー
+                            $result->stepper_count = $val->tgt_physical_data;
                             break;
                     }
                 }
@@ -362,6 +366,58 @@ class CalorieController extends Controller
         $physical_data->tgt_physical_category = $request->utgt_physical_category;
         $physical_data->tgt_physical_data     = $request->utgt_physical_data;
         $physical_data->save();
+
+        // ステッパーの値が更新された場合の計算処理
+        if ($request->utgt_physical_category == 205) {
+            $stepper_value = floatval($request->utgt_physical_data);
+
+            // 歩行時間の計算
+            $walking_time = $stepper_value * (6.0 / 4.0);
+
+            // 歩数の計算
+            $steps = $walking_time * 110;
+
+            // 歩行距離の計算
+            $walking_distance = ($steps * 0.7) / 1000;
+
+            // 確定熱量の計算（ステッパー値を時間に変換）
+            $confirmed_calorie = 6.0 * 64 * ($stepper_value / 60) * 1.05;
+
+            // 既存の値を取得
+            $existing_data = DB::table('physical_datas')
+                ->where('tgt_physical_date', date('Y-m-d', strtotime($request->utgt_physical_date)))
+                ->whereIn('tgt_physical_category', [200, 201, 202, 204])
+                ->get();
+
+            // 各カテゴリの既存値を更新または新規作成
+            $categories = [
+                200 => $walking_time,
+                201 => $steps,
+                202 => $walking_distance,
+                204 => $confirmed_calorie,
+            ];
+
+            foreach ($categories as $category_id => $value) {
+                $existing = $existing_data->where('tgt_physical_category', $category_id)->first();
+
+                if ($existing) {
+                    // 既存の値を更新
+                    DB::table('physical_datas')
+                        ->where('id', $existing->id)
+                        ->update(['tgt_physical_data' => $value]);
+                } else {
+                    // 新規作成
+                    DB::table('physical_datas')->insert([
+                        'tgt_physical_date'     => date('Y-m-d', strtotime($request->utgt_physical_date)),
+                        'tgt_physical_category' => $category_id,
+                        'tgt_physical_item'     => '記載なし',
+                        'tgt_physical_data'     => $value,
+                        'created_at'            => now(),
+                        'updated_at'            => now(),
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('calorie.showphysical', ['tgtdate' => $request->utgt_physical_date])->with('message', 'データを更新しました');
     }

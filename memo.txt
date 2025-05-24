@@ -55,3 +55,8 @@ docker exec -i caloriewars-db mysql -u mtake -pManabu2010 caloriewars < ./ikefuk
 
 git config --global user.name "pugachev"
 git config --global user.email "pugachev2011@gmail.com"
+
+
+20250524 新機能追加その1
+・一覧画面でステッパー数を表示する
+physical_categoriesテーブルにステッパー(205)として存在している
