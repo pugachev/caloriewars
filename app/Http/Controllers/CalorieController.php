@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 // include("jpgraph/src/jpgraph.php");
@@ -41,21 +40,21 @@ class CalorieController extends Controller
             ->orderByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') desc")
             ->get();
 
-        $merged_data = array();
+        $merged_data = [];
 
         // 各データに運動量データを追加
         foreach ($results as $result) {
             // 週番号と曜日の追加
             $result->weeknum = CalorieController::getWeekOfYear($result->tgtdate);
-            $week = array("日", "月", "火", "水", "木", "金", "土");
-            $datetime = new DateTime($result->tgtdate);
+            $week            = ["日", "月", "火", "水", "木", "金", "土"];
+            $datetime        = new DateTime($result->tgtdate);
             $result->weekday = $week[$datetime->format("w")];
 
             // 運動量データの初期化
-            $result->walking_time = 0;
-            $result->walking_steps = 0;
-            $result->walking_distance = 0;
-            $result->confirmed_weight = 0;
+            $result->walking_time      = 0;
+            $result->walking_steps     = 0;
+            $result->walking_distance  = 0;
+            $result->confirmed_weight  = 0;
             $result->confirmed_calorie = 0;
 
             // 該当日の運動量データを取得
@@ -98,27 +97,27 @@ class CalorieController extends Controller
             return date('Y', strtotime($item->tgtdate));
         });
 
-        $perPage = 10;
+        $perPage             = 10;
         $paginatedYearlyData = [];
 
         foreach ($yearlyData as $year => $yearData) {
-            $currentPage = request()->get('page_' . $year, 1);
+            $currentPage                = request()->get('page_' . $year, 1);
             $paginatedYearlyData[$year] = new \Illuminate\Pagination\LengthAwarePaginator(
                 $yearData->forPage($currentPage, $perPage),
                 $yearData->count(),
                 $perPage,
                 $currentPage,
                 [
-                    'path' => request()->url(),
+                    'path'     => request()->url(),
                     'pageName' => 'page_' . $year,
-                    'query' => ['year' => $year],
+                    'query'    => ['year' => $year],
                 ]
             );
         }
 
         return view('calorie.index', [
-            'yearlyData' => $paginatedYearlyData,
-            'categories' => DB::table('categories')->get(),
+            'yearlyData'          => $paginatedYearlyData,
+            'categories'          => DB::table('categories')->get(),
             'physical_categories' => DB::table('physical_categories')->get(),
         ]);
     }
@@ -141,11 +140,11 @@ class CalorieController extends Controller
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $calorie = new Calorie();
-        $calorie->tgtdate = date('Y-m-d', strtotime($request->tgtdate));
+        $calorie              = new Calorie();
+        $calorie->tgtdate     = date('Y-m-d', strtotime($request->tgtdate));
         $calorie->tgttimezone = $request->tgttimezone;
         $calorie->tgtcategory = $request->tgtcategory;
-        $calorie->tgtitem = $request->tgtitem;
+        $calorie->tgtitem     = $request->tgtitem;
 
         //2023-06-11 fitbit用の修正 入力値から基礎代謝を控除する
         if ($calorie->tgtcategory == 106) {
@@ -167,18 +166,86 @@ class CalorieController extends Controller
      */
     public function store_physical_info(Request $request)
     {
-        $physical_data = new physical_data();
-        $physical_data->tgt_physical_date = date('Y-m-d', strtotime($request->tgtdate));
-        $physical_data->tgt_physical_category = $request->tgtcategory;
-        if (isset($request->tgtitem) && trim($request->tgtitem) != "") {
-            $physical_data->tgt_physical_item = $request->tgtitem;
+        // 同じ日付の同じカテゴリのデータが存在するか確認
+        $existing_data = DB::table('physical_datas')
+            ->where('tgt_physical_date', date('Y-m-d', strtotime($request->tgtdate)))
+            ->where('tgt_physical_category', $request->tgtcategory)
+            ->first();
+
+        if ($existing_data) {
+            // 既存のデータがある場合は、値を加算して更新
+            DB::table('physical_datas')
+                ->where('id', $existing_data->id)
+                ->update([
+                    'tgt_physical_data' => $existing_data->tgt_physical_data + floatval($request->tgtcalorie),
+                    'updated_at'        => now(),
+                ]);
         } else {
-            $physical_data->tgt_physical_item = "記載なし";
+            // 新規データの作成
+            $physical_data                        = new physical_data();
+            $physical_data->tgt_physical_date     = date('Y-m-d', strtotime($request->tgtdate));
+            $physical_data->tgt_physical_category = $request->tgtcategory;
+            if (isset($request->tgtitem) && trim($request->tgtitem) != "") {
+                $physical_data->tgt_physical_item = $request->tgtitem;
+            } else {
+                $physical_data->tgt_physical_item = "記載なし";
+            }
+            $physical_data->tgt_physical_data = $request->tgtcalorie;
+            $physical_data->save();
         }
 
-        $physical_data->tgt_physical_data = $request->tgtcalorie;
+        // ステッパーの値が入力された場合の計算処理
+        if ($request->tgtcategory == 205) {
+            $stepper_value = floatval($request->tgtcalorie);
 
-        $physical_data->save();
+            // 歩行時間の計算
+            $walking_time = $stepper_value * (6.0 / 4.0);
+
+            // 歩数の計算
+            $steps = $walking_time * 110;
+
+            // 歩行距離の計算
+            $walking_distance = ($steps * 0.7) / 1000;
+
+            // 確定熱量の計算（ステッパー値を時間に変換）
+            $confirmed_calorie = 6.0 * 64 * ($stepper_value / 60) * 1.05;
+
+            // 既存の値を取得
+            $existing_data = DB::table('physical_datas')
+                ->where('tgt_physical_date', date('Y-m-d', strtotime($request->tgtdate)))
+                ->whereIn('tgt_physical_category', [200, 201, 202, 204])
+                ->get();
+
+            // 各カテゴリの既存値を更新または新規作成
+            $categories = [
+                200 => $walking_time,
+                201 => $steps,
+                202 => $walking_distance,
+                204 => $confirmed_calorie,
+            ];
+
+            foreach ($categories as $category_id => $value) {
+                $existing = $existing_data->where('tgt_physical_category', $category_id)->first();
+
+                if ($existing) {
+                    // 既存の値に加算
+                    DB::table('physical_datas')
+                        ->where('id', $existing->id)
+                        ->update(['tgt_physical_data' => $existing->tgt_physical_data + $value]);
+                } else {
+                    // 新規作成
+                    DB::table('physical_datas')->insert([
+                        'tgt_physical_date'     => date('Y-m-d', strtotime($request->tgtdate)),
+                        'tgt_physical_category' => $category_id,
+                        'tgt_physical_item'     => '記載なし',
+                        'tgt_physical_data'     => $value,
+                        'created_at'            => now(),
+                        'updated_at'            => now(),
+                    ]);
+                }
+            }
+        }
+
         return redirect()->to('calorie')->with('message', 'データを保存しました');
     }
 
@@ -215,9 +282,9 @@ class CalorieController extends Controller
             ->whereRaw("DATE_FORMAT(physical_datas.tgt_physical_date,'%Y-%m-%d') = ?", $tgtdate)
             ->value('totalconsumptionsum');
 
-        $week = array("日", "月", "火", "水", "木", "金", "土");
+        $week     = ["日", "月", "火", "水", "木", "金", "土"];
         $datetime = new DateTime($tgtdate);
-        $weekday = $week[$datetime->format("w")];
+        $weekday  = $week[$datetime->format("w")];
 
         return view('calorie.detail', compact('results', 'categories', 'tgtdate', 'totalcaloriesum', 'totalconsumptionsum', 'weekday'));
     }
@@ -239,9 +306,9 @@ class CalorieController extends Controller
             ->orderBy('physical_cateid', 'asc')
             ->get();
 
-        $week = array("日", "月", "火", "水", "木", "金", "土");
+        $week     = ["日", "月", "火", "水", "木", "金", "土"];
         $datetime = new DateTime($tgtdate);
-        $weekday = $week[$datetime->format("w")];
+        $weekday  = $week[$datetime->format("w")];
 
         return view('calorie.detail_physical', compact('results', 'physical_categories', 'tgtdate', 'weekday'));
     }
@@ -266,11 +333,11 @@ class CalorieController extends Controller
      */
     public function update(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $calorie = Calorie::find($request->updateId);
-        $calorie->tgtdate = $request->tgtdate;
+        $calorie              = Calorie::find($request->updateId);
+        $calorie->tgtdate     = $request->tgtdate;
         $calorie->tgttimezone = $request->tgttimezone;
         $calorie->tgtcategory = $request->tgtcategory;
-        $calorie->tgtitem = $request->tgtitem;
+        $calorie->tgtitem     = $request->tgtitem;
         //2023-06-11 fitbit用の修正 入力値から基礎代謝を控除する
         if ($calorie->tgtcategory == 106) {
             if (intval($request->tgtcalorie) > 1430) {
@@ -290,10 +357,10 @@ class CalorieController extends Controller
 
     public function updatephysical(Request $request)
     {
-        $physical_data = Physical_data::find($request->updateId);
-        $physical_data->tgt_physical_date = $request->utgt_physical_date;
+        $physical_data                        = Physical_data::find($request->updateId);
+        $physical_data->tgt_physical_date     = $request->utgt_physical_date;
         $physical_data->tgt_physical_category = $request->utgt_physical_category;
-        $physical_data->tgt_physical_data = $request->utgt_physical_data;
+        $physical_data->tgt_physical_data     = $request->utgt_physical_data;
         $physical_data->save();
 
         return redirect()->route('calorie.showphysical', ['tgtdate' => $request->utgt_physical_date])->with('message', 'データを更新しました');
@@ -308,7 +375,7 @@ class CalorieController extends Controller
     public function destroyphysical(Request $request): \Illuminate\Http\RedirectResponse
     {
         $physical_data = Physical_data::find($request->deleteId);
-        $tmpdate = $request->dtgt_physical_date;
+        $tmpdate       = $request->dtgt_physical_date;
         $physical_data->delete();
         return redirect()->route('calorie.showphysical', ['tgtdate' => $tmpdate])->with('message', 'データを更新しました');
     }
@@ -325,32 +392,32 @@ class CalorieController extends Controller
     {
 
         $results = "";
-        $query = DB::table('calories')
+        $query   = DB::table('calories')
             ->select('calories.id', 'tgtdate', 'tgttimezone', 'tgtcategory', 'tgtitem', 'tgtcalorie', 'categories.catename as catename', )
             ->leftJoin('categories', 'calories.tgtcategory', '=', 'categories.cateid');
 
         //検索ワードの存在チェック
-        if (isset($request->searchword) && !empty($request->searchword)) {
+        if (isset($request->searchword) && ! empty($request->searchword)) {
             $pat = '%' . addcslashes($request->searchword, '%_\\') . '%';
             $query->where('tgtitem', 'LIKE', $pat);
         }
 
         //カテゴリの存在チェック
-        if (isset($request->searchcategory) && !empty($request->searchcategory)) {
+        if (isset($request->searchcategory) && ! empty($request->searchcategory)) {
             $query->where('tgtcategory', $request->searchcategory);
         }
 
         //日付の存在チェック
         //開始日と終了日の両方が存在する場合
-        if ((isset($request->from) && !empty($request->from)) && (isset($request->to) && !empty($request->to))) {
+        if ((isset($request->from) && ! empty($request->from)) && (isset($request->to) && ! empty($request->to))) {
             $query->whereBetween('tgtdate', [$request->from, $request->to]);
         }
         //開始日だけが存在する場合
-        else if (isset($request->from) && !empty($request->from)) {
+        else if (isset($request->from) && ! empty($request->from)) {
             $query->where('tgtdate', '>=', $request->from);
         }
         //終了日だけが存在する場合
-        else if (isset($request->to) && !empty($request->to)) {
+        else if (isset($request->to) && ! empty($request->to)) {
             $query->where('tgtdate', '=<', $request->to);
         }
 
@@ -367,7 +434,7 @@ class CalorieController extends Controller
     {
 
         $results = "";
-        $query = DB::table('calories')
+        $query   = DB::table('calories')
             ->select('calories.tgtdate as tgtdate', DB::raw("sum(tgtcalorie) as sumcolorie"));
 
         //運動量の合計をあつめる
@@ -375,15 +442,15 @@ class CalorieController extends Controller
 
         //日付の存在チェック
         //開始日と終了日の両方が存在する場合
-        if ((isset($request->from) && !empty($request->from)) && (isset($request->to) && !empty($request->to))) {
+        if ((isset($request->from) && ! empty($request->from)) && (isset($request->to) && ! empty($request->to))) {
             $query->whereBetween('tgtdate', [$request->from, $request->to]);
         }
         //開始日だけが存在する場合
-        else if (isset($request->from) && !empty($request->from)) {
+        else if (isset($request->from) && ! empty($request->from)) {
             $query->where('tgtdate', '>=', $request->from);
         }
         //終了日だけが存在する場合
-        else if (isset($request->to) && !empty($request->to)) {
+        else if (isset($request->to) && ! empty($request->to)) {
             $query->where('tgtdate', '=<', $request->to);
         }
 
@@ -391,7 +458,7 @@ class CalorieController extends Controller
 
         $query->orderBy('calories.tgtdate', 'desc');
         //摂取過多のチェック
-        if (isset($request->overcalorie) && !empty($request->overcalorie) && ($request->overcalorie == 1)) {
+        if (isset($request->overcalorie) && ! empty($request->overcalorie) && ($request->overcalorie == 1)) {
             $query->orderBy(DB::raw("sumcolorie"), 'desc');
         }
 
@@ -417,9 +484,9 @@ class CalorieController extends Controller
                 ->groupBy("week")->get();
 
             // 横軸に表示する第x週ラベル
-            $labels = array();
+            $labels = [];
             // 第x週のカロリー合計値
-            $weeksum = array();
+            $weeksum = [];
             foreach ($results as $result) {
                 // labelの追加
                 array_push($labels, $result->week);
@@ -434,7 +501,7 @@ class CalorieController extends Controller
                 ->groupBy("week")->get();
 
             // 週単位の平均体重を格納する配列
-            $week_avg_weight = array();
+            $week_avg_weight = [];
 
             // カロリーの週単位の配列を利用して平均確定配列を0で初期化
             for ($i = 0; $i < count($labels); $i++) {
@@ -469,8 +536,8 @@ class CalorieController extends Controller
             $year = $request->input('tgtyear', date('Y'));
 
             // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks = range(0, 51);
-            $weeksum = array_fill(0, 52, 0);
+            $all_weeks       = range(0, 51);
+            $weeksum         = array_fill(0, 52, 0);
             $week_avg_weight = array_fill(0, 52, 0);
 
             // (A) 週単位でカロリー接収データを集める
@@ -522,10 +589,10 @@ class CalorieController extends Controller
             }
 
             return response()->json([
-                'labels' => $all_weeks,
-                'weeksum' => $weeksum,
+                'labels'          => $all_weeks,
+                'weeksum'         => $weeksum,
                 'week_avg_weight' => $week_avg_weight,
-                'year' => $year,
+                'year'            => $year,
             ]);
 
         } catch (Exception $e) {
@@ -542,7 +609,7 @@ class CalorieController extends Controller
     {
         try {
             $currentYear = date('Y');
-            $labels = ['2025', '2024', '2023'];
+            $labels      = ['2025', '2024', '2023'];
             return view('calorie.statics_steps_distance', compact('labels'));
         } catch (Exception $e) {
             error_log($e->getMessage());
@@ -559,8 +626,8 @@ class CalorieController extends Controller
             $year = $request->input('tgtyear', date('Y'));
 
             // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks = range(0, 51);
-            $steps_data = array_fill(0, 52, 0);
+            $all_weeks     = range(0, 51);
+            $steps_data    = array_fill(0, 52, 0);
             $distance_data = array_fill(0, 52, 0);
 
             // (A) 週単位で歩数データを集める
@@ -612,10 +679,10 @@ class CalorieController extends Controller
             }
 
             return response()->json([
-                'labels' => $all_weeks,
-                'steps_data' => $steps_data,
+                'labels'        => $all_weeks,
+                'steps_data'    => $steps_data,
                 'distance_data' => $distance_data,
-                'year' => $year,
+                'year'          => $year,
             ]);
 
         } catch (Exception $e) {
@@ -640,9 +707,9 @@ class CalorieController extends Controller
             $year = $request->input('tgtyear', date('Y'));
 
             // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks = range(0, 51);
+            $all_weeks  = range(0, 51);
             $steps_data = array_fill(0, 52, 0);
-            $time_data = array_fill(0, 52, 0);
+            $time_data  = array_fill(0, 52, 0);
 
             // (A) 週単位で歩数データを集める
             $steps_results = DB::table('physical_datas')
@@ -693,10 +760,10 @@ class CalorieController extends Controller
             }
 
             return response()->json([
-                'labels' => $all_weeks,
+                'labels'     => $all_weeks,
                 'steps_data' => $steps_data,
-                'time_data' => $time_data,
-                'year' => $year,
+                'time_data'  => $time_data,
+                'year'       => $year,
             ]);
 
         } catch (Exception $e) {
@@ -721,8 +788,8 @@ class CalorieController extends Controller
             $year = $request->input('tgtyear', date('Y'));
 
             // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks = range(0, 51);
-            $steps_data = array_fill(0, 52, 0);
+            $all_weeks   = range(0, 51);
+            $steps_data  = array_fill(0, 52, 0);
             $weight_data = array_fill(0, 52, 0);
 
             // (A) 週単位で歩数データを集める
@@ -774,10 +841,10 @@ class CalorieController extends Controller
             }
 
             return response()->json([
-                'labels' => $all_weeks,
-                'steps_data' => $steps_data,
+                'labels'      => $all_weeks,
+                'steps_data'  => $steps_data,
                 'weight_data' => $weight_data,
-                'year' => $year,
+                'year'        => $year,
             ]);
 
         } catch (Exception $e) {
@@ -792,27 +859,27 @@ class CalorieController extends Controller
     public function chartgraph(Request $request)
     {
         $rsumcalorie = "";
-        $from = "";
-        $to = "";
+        $from        = "";
+        $to          = "";
         try {
             //カテゴリIDとカテゴリ別の合計値の取得
-            if ((isset($request->from) && !empty($request->from)) && (isset($request->to) && !empty($request->to))) {
-                $from = $request->from;
-                $to = $request->to;
+            if ((isset($request->from) && ! empty($request->from)) && (isset($request->to) && ! empty($request->to))) {
+                $from        = $request->from;
+                $to          = $request->to;
                 $rsumcalorie = DB::table('calories')
                     ->select('tgtcategory', DB::raw("sum(calories.tgtcalorie) as sumcalorie"))
                     ->whereBetween('tgtdate', [$request->from, $request->to])
                     ->groupBy('calories.tgtcategory')
                     ->get();
-            } else if (isset($request->from) && !empty($request->from)) {
-                $from = $request->from;
+            } else if (isset($request->from) && ! empty($request->from)) {
+                $from        = $request->from;
                 $rsumcalorie = DB::table('calories')
                     ->select('tgtcategory', DB::raw("sum(calories.tgtcalorie) as sumcalorie"))
                     ->where('tgtdate', '>=', $request->from)
                     ->groupBy('calories.tgtcategory')
                     ->get();
-            } else if (isset($request->to) && !empty($request->to)) {
-                $to = $request->to;
+            } else if (isset($request->to) && ! empty($request->to)) {
+                $to          = $request->to;
                 $rsumcalorie = DB::table('calories')
                     ->select('tgtcategory', DB::raw("sum(calories.tgtcalorie) as sumcalorie"))
                     ->where('tgtdate', '<=', $request->to)
@@ -820,8 +887,8 @@ class CalorieController extends Controller
                     ->get();
             } else {
                 //日付の指定がない場合は当月の1日から末日まで検索する
-                $first_date = date("Y-m-01");
-                $last_date = date("Y-m-t");
+                $first_date  = date("Y-m-01");
+                $last_date   = date("Y-m-t");
                 $rsumcalorie = DB::table('calories')
                     ->select('tgtcategory', DB::raw("sum(calories.tgtcalorie) as sumcalorie"))
                     ->whereBetween('tgtdate', [$first_date, $last_date])

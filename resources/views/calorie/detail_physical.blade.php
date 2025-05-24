@@ -178,7 +178,7 @@ foreach($physical_categories as $val){
                         <div class="form-group mb-1">
                             <span class="col-2">種類</span>
                                 <select name="tgtcategory" id="tgtcategory" class="browser-default custom-select">
-                                    <?php echo $cate_data; ?>
+                                    <?php echo $physical_cate_data; ?>
                                 </select>
                         </div>
                         <div class="form-group mb-1">
@@ -221,7 +221,7 @@ foreach($physical_categories as $val){
                         <div class="form-group mb-1">
                             <span class="col-2">カテゴリ名</span>
                                 <select id="utgt_physical_category" name="utgt_physical_category" class="browser-default custom-select">
-                                    <?php echo $cate_data; ?>
+                                    <?php echo $physical_cate_data; ?>
                                 </select>
                         </div>
                         <div class="form-group mb-1">
@@ -261,7 +261,7 @@ foreach($physical_categories as $val){
                         <div class="form-group mb-1">
                             <span class="col-2">カテゴリ名</span>
                                 <select id="dtgt_physical_category" name="dtgt_physical_category" class="browser-default custom-select">
-                                    <?php echo $cate_data; ?>
+                                    <?php echo $physical_cate_data; ?>
                                 </select>
                         </div>
                         <div class="form-group mb-1">
