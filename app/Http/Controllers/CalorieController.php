@@ -56,7 +56,7 @@ class CalorieController extends Controller
             $result->walking_distance  = 0;
             $result->confirmed_weight  = 0;
             $result->confirmed_calorie = 0;
-            $result->stepper_count     = 0;  // ステッパー数を追加
+            $result->stepper_count     = 0; // ステッパー数を追加
 
             // 該当日の運動量データを取得
             $physical_results = DB::table('physical_datas')
@@ -261,6 +261,9 @@ class CalorieController extends Controller
      */
     public function show($tgtdate): \Illuminate\Contracts\View\View  | \Illuminate\Contracts\View\Factory
     {
+        // 先頭10文字だけ取得（例：2025-05-28 00:00:00 → 2025-05-28）
+        $tgtdate = substr($tgtdate, 0, 10);
+
         $results = DB::table('calories')
             ->select('calories.id as id', 'tgtdate', 'categories.cateid as cateid', 'categories.catename as catename', 'tgttimezone', 'tgtitem', 'tgtcalorie')
             ->leftJoin('categories', 'categories.cateid', '=', 'calories.tgtcategory')
@@ -356,7 +359,7 @@ class CalorieController extends Controller
         $tmpdate = $calorie->tgtdate;
 
         $calorie->save();
-        return redirect()->route('calorie.show', ['tgtdate' => $tmpdate])->with('message', 'データを更新しました');
+        return redirect()->route('calorie.show', ['tgtdate' => date('Y-m-d', strtotime($tmpdate))])->with('message', 'データを更新しました');
     }
 
     public function updatephysical(Request $request)
