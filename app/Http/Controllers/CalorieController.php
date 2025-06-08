@@ -92,7 +92,7 @@ class CalorieController extends Controller
                 }
             }
             // 確定摂取熱量の計算
-            $result->confirmed_calorie = $result->sumcolorie - (1450 + $result->confirmed_physical_calorie);
+            $result->confirmed_calorie = intval(($result->sumcolorie) - (1450 + intval($result->confirmed_physical_calorie)));
 
             $merged_data[] = $result;
         }
