@@ -51,12 +51,13 @@ class CalorieController extends Controller
             $result->weekday = $week[$datetime->format("w")];
 
             // 運動量データの初期化
-            $result->walking_time      = 0;
-            $result->walking_steps     = 0;
-            $result->walking_distance  = 0;
-            $result->confirmed_weight  = 0;
-            $result->confirmed_calorie = 0;
-            $result->stepper_count     = 0; // ステッパー数を追加
+            $result->walking_time               = 0;
+            $result->walking_steps              = 0;
+            $result->walking_distance           = 0;
+            $result->confirmed_weight           = 0;
+            $result->confirmed_calorie          = 0;
+            $result->stepper_count              = 0; // ステッパー数を追加
+            $result->confirmed_physical_calorie = 0;
 
             // 該当日の運動量データを取得
             $physical_results = DB::table('physical_datas')
@@ -80,15 +81,18 @@ class CalorieController extends Controller
                         case 203: // 確定体重
                             $result->confirmed_weight = $val->tgt_physical_data;
                             break;
-                        case 204: // 確定熱量
-                            $result->confirmed_calorie = $val->tgt_physical_data;
+                        case 204: // 確定運動量
+                            $result->confirmed_physical_calorie = $val->tgt_physical_data;
                             break;
                         case 205: // ステッパー
                             $result->stepper_count = $val->tgt_physical_data;
                             break;
+
                     }
                 }
             }
+            // 確定摂取熱量の計算
+            $result->confirmed_calorie = $result->sumcolorie - (1450 + $result->confirmed_physical_calorie);
 
             $merged_data[] = $result;
         }
