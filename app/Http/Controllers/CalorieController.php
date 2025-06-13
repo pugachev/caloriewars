@@ -539,24 +539,44 @@ class CalorieController extends Controller
         try {
             $currentYear = date('Y');
 
-            // (A) 週単位でカロリー接収データを集める
-            $results = DB::table('calories')
-                ->selectRaw("sum(tgtcalorie) as weeksum, FLOOR((DAYOFYEAR(tgtdate) - 1) / 7) as week")
+            // (A) 日ごとにデータを取得
+            $dailyResults = DB::table('calories')
+                ->selectRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') as tgtdate, sum(calories.tgtcalorie) as sumcolorie")
                 ->where('tgtcategory', '!=', '106')
                 ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [$currentYear])
-                ->groupBy("week")->get();
+                ->groupByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d')")
+                ->get();
 
-            // 横軸に表示する第x週ラベル
-            $labels = [];
-            // 第x週のカロリー合計値
-            $weeksum = [];
-            foreach ($results as $result) {
-                // labelの追加
-                array_push($labels, $result->week);
-                array_push($weeksum, $result->weeksum);
+            $confirmedCalories = [];
+            foreach ($dailyResults as $result) {
+                // 日ごとの消費カロリーを取得
+                $physical = DB::table('physical_datas')
+                    ->where('tgt_physical_date', $result->tgtdate)
+                    ->where('tgt_physical_category', 204)
+                    ->value('tgt_physical_data');
+                $physical = $physical ?? 0;
+
+                // 確定摂取熱量
+                $confirmed = intval($result->sumcolorie) - (1450 + intval($physical));
+                $confirmedCalories[] = [
+                    'date' => $result->tgtdate,
+                    'week' => self::getWeekOfYear($result->tgtdate),
+                    'confirmed_calorie' => -1 * $confirmed,
+                ];
             }
 
-            // (B) 週単位で確定体重データを集める
+            // 週ごとにグループ化して平均を計算
+            $weeksum = array_fill(0, 52, 0);
+            $labels = range(0, 51);
+            $grouped = collect($confirmedCalories)->groupBy('week');
+            foreach ($grouped as $week => $items) {
+                $avg = round(collect($items)->avg('confirmed_calorie'), 0);
+                if ($week >= 0 && $week <= 51) {
+                    $weeksum[$week] = $avg;
+                }
+            }
+
+            // (B) 週単位で確定体重データを集める（元のまま）
             $physical_results = DB::table('physical_datas')
                 ->selectRaw("round(avg(tgt_physical_data),2) as week_avg_weight, FLOOR((DAYOFYEAR(tgt_physical_date) - 1) / 7) as week")
                 ->where("tgt_physical_category", "=", "203")
@@ -564,16 +584,11 @@ class CalorieController extends Controller
                 ->groupBy("week")->get();
 
             // 週単位の平均体重を格納する配列
-            $week_avg_weight = [];
-
-            // カロリーの週単位の配列を利用して平均確定配列を0で初期化
-            for ($i = 0; $i < count($labels); $i++) {
-                $week_avg_weight[$i] = 0;
-            }
-
-            // 平均体重の配列に第x週を添え字にして平均体重を格納する
+            $week_avg_weight = array_fill(0, 52, 0);
             foreach ($physical_results as $result) {
-                $week_avg_weight[$result->week] = $result->week_avg_weight;
+                if ($result->week >= 0 && $result->week <= 51) {
+                    $week_avg_weight[$result->week] = $result->week_avg_weight;
+                }
             }
 
             // フィジカルデータ用のカテゴリを集める
@@ -603,31 +618,42 @@ class CalorieController extends Controller
             $weeksum         = array_fill(0, 52, 0);
             $week_avg_weight = array_fill(0, 52, 0);
 
-            // (A) 週単位でカロリー接収データを集める
-            $results = DB::table('calories')
-                ->selectRaw("
-                    sum(tgtcalorie) as weeksum,
-                    CASE
-                        WHEN DAYOFWEEK(DATE_FORMAT(tgtdate, '%Y-01-01')) > 1
-                        THEN FLOOR((DAYOFYEAR(tgtdate) + DAYOFWEEK(DATE_FORMAT(tgtdate, '%Y-01-01')) - 2) / 7)
-                        ELSE FLOOR((DAYOFYEAR(tgtdate) - 1) / 7)
-                    END as week,
-                    date_format(tgtdate ,'%Y') as year
-                ")
+            // (A) 日ごとにデータを取得
+            $dailyResults = DB::table('calories')
+                ->selectRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d') as tgtdate, sum(calories.tgtcalorie) as sumcolorie")
                 ->where('tgtcategory', '!=', '106')
                 ->whereRaw("DATE_FORMAT(calories.tgtdate,'%Y') = ?", [$year])
-                ->groupBy("week", "year")
-                ->orderBy("week")
+                ->groupByRaw("DATE_FORMAT(calories.tgtdate,'%Y-%m-%d')")
                 ->get();
 
-            // カロリーデータの処理
-            foreach ($results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
-                    $weeksum[$result->week] = round($result->weeksum, 0);
+            $confirmedCalories = [];
+            foreach ($dailyResults as $result) {
+                // 日ごとの消費カロリーを取得
+                $physical = DB::table('physical_datas')
+                    ->where('tgt_physical_date', $result->tgtdate)
+                    ->where('tgt_physical_category', 204)
+                    ->value('tgt_physical_data');
+                $physical = $physical ?? 0;
+
+                // 確定摂取熱量
+                $confirmed = intval($result->sumcolorie) - (1450 + intval($physical));
+                $confirmedCalories[] = [
+                    'date' => $result->tgtdate,
+                    'week' => self::getWeekOfYear($result->tgtdate),
+                    'confirmed_calorie' => -1 * $confirmed,
+                ];
+            }
+
+            // 週ごとにグループ化して平均を計算
+            $grouped = collect($confirmedCalories)->groupBy('week');
+            foreach ($grouped as $week => $items) {
+                $avg = round(collect($items)->avg('confirmed_calorie'), 0);
+                if ($week >= 0 && $week <= 51) {
+                    $weeksum[$week] = $avg;
                 }
             }
 
-            // (B) 週単位で確定体重データを集める
+            // (B) 週単位で確定体重データを集める（元のまま）
             $physical_results = DB::table('physical_datas')
                 ->selectRaw("
                     round(avg(tgt_physical_data),2) as week_avg_weight,
