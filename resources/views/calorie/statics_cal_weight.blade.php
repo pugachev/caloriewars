@@ -18,7 +18,7 @@
 ?>
 
 <div class="container-fluid" style="width: 70%; margin: 0 auto;">
-    <h2 class="text-center">カロリー週計 x 週平均体重</h2>
+    <h2 class="text-center">確定摂取カロリー週計 x 週平均体重</h2>
     <div class="text-center mb-3">
         <h4><small>目標:<strong>1600kcal</strong></small></h4>
     </div>
@@ -152,7 +152,7 @@
                         labels: data.labels,
                         datasets: [
                             {
-                                label: 'カロリー週計',
+                                label: '確定摂取カロリー週計',
                                 data: data.weeksum,
                                 borderColor: '#f88',
                                 yAxisID: 'left-y-axis'
