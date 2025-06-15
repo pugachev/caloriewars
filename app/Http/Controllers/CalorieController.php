@@ -561,7 +561,7 @@ class CalorieController extends Controller
                 $confirmedCalories[] = [
                     'date' => $result->tgtdate,
                     'week' => self::getWeekOfYear($result->tgtdate),
-                    'confirmed_calorie' => -1 * $confirmed,
+                    'confirmed_calorie' => $confirmed,
                 ];
             }
 
@@ -640,7 +640,7 @@ class CalorieController extends Controller
                 $confirmedCalories[] = [
                     'date' => $result->tgtdate,
                     'week' => self::getWeekOfYear($result->tgtdate),
-                    'confirmed_calorie' => -1 * $confirmed,
+                    'confirmed_calorie' => $confirmed,
                 ];
             }
 

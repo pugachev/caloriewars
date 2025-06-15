@@ -157,12 +157,12 @@
                                 borderColor: '#f88',
                                 yAxisID: 'left-y-axis'
                             },
-                            {
-                                label: '週平均体重',
-                                data: data.week_avg_weight,
-                                borderColor: '#6495ED',
-                                yAxisID: 'right-y-axis'
-                            }
+                            // {
+                            //     label: '週平均体重',
+                            //     data: data.week_avg_weight,
+                            //     borderColor: '#6495ED',
+                            //     yAxisID: 'right-y-axis'
+                            // }
                         ],
                     },
                     options: {
