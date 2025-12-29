@@ -91,24 +91,24 @@ foreach($physical_categories as $val){
                     <tbody>
                         @foreach ($paginatedItems as $result)
                             <tr>
-                                <td class="text-center d-none d-md-table-cell">{{ $result->weeknum }}</td>
+                                <td class="text-center d-none d-md-table-cell">{{ $result->weeknum ?? 0 }}</td>
                                 <td class="text-left">
                                     {{ date('Y-m-d', strtotime($result->tgtdate)) }}
-                                    <span style="color: {{ $result->weekday == '日' ? 'red' : ($result->weekday == '土' ? 'blue' : 'inherit') }};">
-                                        ({{ $result->weekday }})
+                                    <span style="color: {{ ($result->weekday ?? '') == '日' ? 'red' : (($result->weekday ?? '') == '土' ? 'blue' : 'inherit') }};">
+                                        ({{ $result->weekday ?? '' }})
                                     </span>
-                                    @if($result->has_tgtcategory_104)
+                                    @if(isset($result->has_tgtcategory_104) && $result->has_tgtcategory_104)
                                         <img src="{{ asset('img/beer.png') }}" alt="アルコール" style="width: 20px; height: 20px; margin-left: 5px;">
                                     @endif
                                 </td>
-                                <td class="text-center d-none d-lg-table-cell">{{ $result->sumcolorie }}</td>
-                                <td class="text-center">{{ $result->walking_time }}</td>
-                                <td class="text-center">{{ $result->walking_steps }}</td>
-                                <td class="text-center">{{ $result->walking_distance }}</td>
-                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_weight }}</td>
-                                <td class="text-center">{{ $result->stepper_count }}</td>
-                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_physical_calorie}}</td>
-                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_calorie}}</td>
+                                <td class="text-center d-none d-lg-table-cell">{{ $result->sumcolorie ?? 0 }}</td>
+                                <td class="text-center">{{ $result->walking_time ?? 0 }}</td>
+                                <td class="text-center">{{ $result->walking_steps ?? 0 }}</td>
+                                <td class="text-center">{{ $result->walking_distance ?? 0 }}</td>
+                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_weight ?? 0 }}</td>
+                                <td class="text-center">{{ $result->stepper_count ?? 0 }}</td>
+                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_physical_calorie ?? 0 }}</td>
+                                <td class="text-center d-none d-lg-table-cell">{{ $result->confirmed_calorie ?? 0 }}</td>
                                 <td class="text-center">
                                     <a class="btn btn-primary btn-sm" href="{{ url('/calorie/show/'.$result->tgtdate) }}">
                                         熱量詳細

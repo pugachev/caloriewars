@@ -45,12 +45,12 @@ class CalorieController extends Controller
         // 各データに運動量データを追加
         foreach ($results as $result) {
             // 週番号と曜日の追加
-            $result->weeknum = CalorieController::getWeekOfYear($result->tgtdate);
+            $result->weeknum = $this->getWeekOfYear($result->tgtdate);
             $week            = ["日", "月", "火", "水", "木", "金", "土"];
             $datetime        = new DateTime($result->tgtdate);
             $result->weekday = $week[$datetime->format("w")];
 
-            // 運動量データの初期化
+            // 運動量データの初期化（必ず設定）
             $result->walking_time               = 0;
             $result->walking_steps              = 0;
             $result->walking_distance           = 0;
@@ -109,9 +109,39 @@ class CalorieController extends Controller
         $paginatedYearlyData = [];
 
         foreach ($yearlyData as $year => $yearData) {
-            $currentPage                = request()->get('page_' . $year, 1);
+            $currentPage = request()->get('page_' . $year, 1);
+
+            // ページネーション前にすべてのアイテムのプロパティを確認・設定
+            $itemsArray = $yearData->map(function ($item) {
+                // プロパティが存在しない場合は0を設定
+                if (! property_exists($item, 'walking_time')) {
+                    $item->walking_time = 0;
+                }
+                if (! property_exists($item, 'walking_steps')) {
+                    $item->walking_steps = 0;
+                }
+                if (! property_exists($item, 'walking_distance')) {
+                    $item->walking_distance = 0;
+                }
+                if (! property_exists($item, 'confirmed_weight')) {
+                    $item->confirmed_weight = 0;
+                }
+                if (! property_exists($item, 'stepper_count')) {
+                    $item->stepper_count = 0;
+                }
+                if (! property_exists($item, 'confirmed_physical_calorie')) {
+                    $item->confirmed_physical_calorie = 0;
+                }
+                if (! property_exists($item, 'confirmed_calorie')) {
+                    $item->confirmed_calorie = 0;
+                }
+                return $item;
+            });
+
+            $paginatedItems = $itemsArray->forPage($currentPage, $perPage);
+
             $paginatedYearlyData[$year] = new \Illuminate\Pagination\LengthAwarePaginator(
-                $yearData->forPage($currentPage, $perPage),
+                $paginatedItems,
                 $yearData->count(),
                 $perPage,
                 $currentPage,
@@ -557,21 +587,21 @@ class CalorieController extends Controller
                 $physical = $physical ?? 0;
 
                 // 確定摂取熱量
-                $confirmed = intval($result->sumcolorie) - (1450 + intval($physical));
+                $confirmed           = intval($result->sumcolorie) - (1450 + intval($physical));
                 $confirmedCalories[] = [
-                    'date' => $result->tgtdate,
-                    'week' => self::getWeekOfYear($result->tgtdate),
+                    'date'              => $result->tgtdate,
+                    'week'              => self::getWeekOfYear($result->tgtdate),
                     'confirmed_calorie' => $confirmed,
                 ];
             }
 
             // 週ごとにグループ化して平均を計算
-            $weeksum = array_fill(0, 52, 0);
-            $labels = range(0, 51);
+            $weeksum = array_fill(0, 53, 0);
+            $labels  = range(0, 52);
             $grouped = collect($confirmedCalories)->groupBy('week');
             foreach ($grouped as $week => $items) {
                 $avg = round(collect($items)->avg('confirmed_calorie'), 0);
-                if ($week >= 0 && $week <= 51) {
+                if ($week >= 0 && $week <= 52) {
                     $weeksum[$week] = $avg;
                 }
             }
@@ -584,9 +614,9 @@ class CalorieController extends Controller
                 ->groupBy("week")->get();
 
             // 週単位の平均体重を格納する配列
-            $week_avg_weight = array_fill(0, 52, 0);
+            $week_avg_weight = array_fill(0, 53, 0);
             foreach ($physical_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $week_avg_weight[$result->week] = $result->week_avg_weight;
                 }
             }
@@ -597,7 +627,16 @@ class CalorieController extends Controller
                 ->orderBy('cateid', 'asc')
                 ->get();
 
-            return view('calorie.statics_cal_weight', compact('labels', 'weeksum', 'categories', 'week_avg_weight'));
+            // データがある年度を取得（降順）
+            $availableYears = DB::table('calories')
+                ->selectRaw('DISTINCT YEAR(tgtdate) as year')
+                ->where('tgtcategory', '!=', '106')
+                ->where('tgtdate', '>=', '2023-01-01')
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->toArray();
+
+            return view('calorie.statics_cal_weight', compact('labels', 'weeksum', 'categories', 'week_avg_weight', 'availableYears'));
         } catch (Exception $e) {
             error_log($e->getMessage());
             return redirect()->route('calorie')->with('error', 'グラフの生成に失敗しました。');
@@ -613,10 +652,10 @@ class CalorieController extends Controller
         try {
             $year = $request->input('tgtyear', date('Y'));
 
-            // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks       = range(0, 51);
-            $weeksum         = array_fill(0, 52, 0);
-            $week_avg_weight = array_fill(0, 52, 0);
+            // 53週分の配列を0で初期化（0週から52週まで）
+            $all_weeks       = range(0, 52);
+            $weeksum         = array_fill(0, 53, 0);
+            $week_avg_weight = array_fill(0, 53, 0);
 
             // (A) 日ごとにデータを取得
             $dailyResults = DB::table('calories')
@@ -636,10 +675,10 @@ class CalorieController extends Controller
                 $physical = $physical ?? 0;
 
                 // 確定摂取熱量
-                $confirmed = intval($result->sumcolorie) - (1450 + intval($physical));
+                $confirmed           = intval($result->sumcolorie) - (1450 + intval($physical));
                 $confirmedCalories[] = [
-                    'date' => $result->tgtdate,
-                    'week' => self::getWeekOfYear($result->tgtdate),
+                    'date'              => $result->tgtdate,
+                    'week'              => self::getWeekOfYear($result->tgtdate),
                     'confirmed_calorie' => $confirmed,
                 ];
             }
@@ -648,7 +687,7 @@ class CalorieController extends Controller
             $grouped = collect($confirmedCalories)->groupBy('week');
             foreach ($grouped as $week => $items) {
                 $avg = round(collect($items)->avg('confirmed_calorie'), 0);
-                if ($week >= 0 && $week <= 51) {
+                if ($week >= 0 && $week <= 52) {
                     $weeksum[$week] = $avg;
                 }
             }
@@ -672,7 +711,7 @@ class CalorieController extends Controller
 
             // 確定体重データの処理
             foreach ($physical_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $week_avg_weight[$result->week] = round($result->week_avg_weight, 1);
                 }
             }
@@ -697,8 +736,17 @@ class CalorieController extends Controller
     public function makegraph2()
     {
         try {
-            $currentYear = date('Y');
-            $labels      = ['2025', '2024', '2023'];
+            // データがある年度を取得（降順）
+            $labels = DB::table('physical_datas')
+                ->selectRaw('DISTINCT YEAR(tgt_physical_date) as year')
+                ->where('tgt_physical_date', '>=', '2023-01-01')
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->map(function ($year) {
+                    return (string) $year;
+                })
+                ->toArray();
+
             return view('calorie.statics_steps_distance', compact('labels'));
         } catch (Exception $e) {
             error_log($e->getMessage());
@@ -714,10 +762,10 @@ class CalorieController extends Controller
         try {
             $year = $request->input('tgtyear', date('Y'));
 
-            // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks     = range(0, 51);
-            $steps_data    = array_fill(0, 52, 0);
-            $distance_data = array_fill(0, 52, 0);
+            // 53週分の配列を0で初期化（0週から52週まで）
+            $all_weeks     = range(0, 52);
+            $steps_data    = array_fill(0, 53, 0);
+            $distance_data = array_fill(0, 53, 0);
 
             // (A) 週単位で歩数データを集める
             $steps_results = DB::table('physical_datas')
@@ -755,14 +803,14 @@ class CalorieController extends Controller
 
             // 歩数データの処理
             foreach ($steps_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $steps_data[$result->week] = round($result->avg_steps, 0);
                 }
             }
 
             // 歩行距離データの処理
             foreach ($distance_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $distance_data[$result->week] = round($result->avg_distance, 1);
                 }
             }
@@ -786,8 +834,23 @@ class CalorieController extends Controller
      */
     public function makegraph3()
     {
-        $labels = ['2025', '2024', '2023'];
-        return view('calorie.statics_steps_time', compact('labels'));
+        try {
+            // データがある年度を取得（降順）
+            $labels = DB::table('physical_datas')
+                ->selectRaw('DISTINCT YEAR(tgt_physical_date) as year')
+                ->where('tgt_physical_date', '>=', '2023-01-01')
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->map(function ($year) {
+                    return (string) $year;
+                })
+                ->toArray();
+
+            return view('calorie.statics_steps_time', compact('labels'));
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return redirect()->route('calorie')->with('error', 'グラフの生成に失敗しました。');
+        }
     }
 
     public function makegraph3ajax(Request $request)
@@ -795,10 +858,10 @@ class CalorieController extends Controller
         try {
             $year = $request->input('tgtyear', date('Y'));
 
-            // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks  = range(0, 51);
-            $steps_data = array_fill(0, 52, 0);
-            $time_data  = array_fill(0, 52, 0);
+            // 53週分の配列を0で初期化（0週から52週まで）
+            $all_weeks  = range(0, 52);
+            $steps_data = array_fill(0, 53, 0);
+            $time_data  = array_fill(0, 53, 0);
 
             // (A) 週単位で歩数データを集める
             $steps_results = DB::table('physical_datas')
@@ -836,14 +899,14 @@ class CalorieController extends Controller
 
             // 歩数データの処理
             foreach ($steps_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $steps_data[$result->week] = round($result->avg_steps, 0);
                 }
             }
 
             // 歩行時間データの処理
             foreach ($time_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $time_data[$result->week] = round($result->avg_time, 0);
                 }
             }
@@ -867,8 +930,23 @@ class CalorieController extends Controller
      */
     public function makegraph4()
     {
-        $labels = ['2025', '2024', '2023'];
-        return view('calorie.statics_steps_weight', compact('labels'));
+        try {
+            // データがある年度を取得（降順）
+            $labels = DB::table('physical_datas')
+                ->selectRaw('DISTINCT YEAR(tgt_physical_date) as year')
+                ->where('tgt_physical_date', '>=', '2023-01-01')
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->map(function ($year) {
+                    return (string) $year;
+                })
+                ->toArray();
+
+            return view('calorie.statics_steps_weight', compact('labels'));
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return redirect()->route('calorie')->with('error', 'グラフの生成に失敗しました。');
+        }
     }
 
     public function makegraph4ajax(Request $request)
@@ -876,10 +954,10 @@ class CalorieController extends Controller
         try {
             $year = $request->input('tgtyear', date('Y'));
 
-            // 52週分の配列を0で初期化（0週から51週まで）
-            $all_weeks   = range(0, 51);
-            $steps_data  = array_fill(0, 52, 0);
-            $weight_data = array_fill(0, 52, 0);
+            // 53週分の配列を0で初期化（0週から52週まで）
+            $all_weeks   = range(0, 52);
+            $steps_data  = array_fill(0, 53, 0);
+            $weight_data = array_fill(0, 53, 0);
 
             // (A) 週単位で歩数データを集める
             $steps_results = DB::table('physical_datas')
@@ -917,14 +995,14 @@ class CalorieController extends Controller
 
             // 歩数データの処理
             foreach ($steps_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $steps_data[$result->week] = round($result->avg_steps, 0);
                 }
             }
 
             // 確定体重データの処理
             foreach ($weight_results as $result) {
-                if ($result->week >= 0 && $result->week <= 51) {
+                if ($result->week >= 0 && $result->week <= 52) {
                     $weight_data[$result->week] = round($result->avg_weight, 1);
                 }
             }

@@ -25,22 +25,18 @@
 
     <!-- タブコントロール -->
     <div id="tabcontrol">
-        <a href="#tabpage1">2025</a>
-        <a href="#tabpage2">2024</a>
-        <a href="#tabpage3">2023</a>
+        @foreach ($availableYears as $index => $year)
+            <a href="#tabpage{{ $index + 1 }}" data-year="{{ $year }}">{{ $year }}</a>
+        @endforeach
     </div>
 
     <!-- タブの内容 -->
     <div id="tabbody">
-        <div id="tabpage1" style="display:none;">
-            <canvas id="lineChart2025"></canvas>
-        </div>
-        <div id="tabpage2" style="display:none;">
-            <canvas id="lineChart2024"></canvas>
-        </div>
-        <div id="tabpage3" style="display:none;">
-            <canvas id="lineChart2023"></canvas>
-        </div>
+        @foreach ($availableYears as $index => $year)
+            <div id="tabpage{{ $index + 1 }}" style="display:none;">
+                <canvas id="lineChart{{ $year }}"></canvas>
+            </div>
+        @endforeach
     </div>
 </div>
 
@@ -85,9 +81,8 @@
 @section('scripts')
 <script type="text/javascript">
   $(function(){
-    let lineChart2025 = null;  // 2025年のグラフ
-    let lineChart2024 = null;  // 2024年のグラフ
-    let lineChart2023 = null;  // 2023年のグラフ
+    // グラフインスタンスを保存するオブジェクト（動的に対応）
+    let lineCharts = {};
 
     // タブを左端に寄せるためのスタイルを追加
     $('#tabcontrol').css({
@@ -101,20 +96,7 @@
     function changeTab(event) {
         event.preventDefault();
         var targetId = $(this).attr('href').replace('#', '');
-        var param1;
-
-        // タブに応じて年を設定
-        switch(targetId) {
-            case 'tabpage1':
-                param1 = 2025;
-                break;
-            case 'tabpage2':
-                param1 = 2024;
-                break;
-            case 'tabpage3':
-                param1 = 2023;
-                break;
-        }
+        var year = $(this).data('year'); // data-year属性から年度を取得
 
         // タブページの表示切り替え
         pages.hide();
@@ -128,21 +110,10 @@
             url: '{{ route('calorie.makegraphajax') }}',
             method: 'GET',
             dataType: 'json',
-            data: { tgtyear: param1},
+            data: { tgtyear: year},
             success: function(data) {
-                // 年に応じて適切なcanvas IDを選択
-                let canvasId;
-                switch(param1) {
-                    case 2025:
-                        canvasId = "lineChart2025";
-                        break;
-                    case 2024:
-                        canvasId = "lineChart2024";
-                        break;
-                    case 2023:
-                        canvasId = "lineChart2023";
-                        break;
-                }
+                // canvas IDを動的に生成
+                let canvasId = "lineChart" + year;
 
                 let lineCtx = document.getElementById(canvasId).getContext('2d');
                 // 線グラフの設定
@@ -204,27 +175,11 @@
                     },
                 };
 
-                // 既存のグラフを破棄して新しいグラフを作成
-                switch(param1) {
-                    case 2025:
-                        if (lineChart2025) {
-                            lineChart2025.destroy();
-                        }
-                        lineChart2025 = new Chart(lineCtx, lineConfig);
-                        break;
-                    case 2024:
-                        if (lineChart2024) {
-                            lineChart2024.destroy();
-                        }
-                        lineChart2024 = new Chart(lineCtx, lineConfig);
-                        break;
-                    case 2023:
-                        if (lineChart2023) {
-                            lineChart2023.destroy();
-                        }
-                        lineChart2023 = new Chart(lineCtx, lineConfig);
-                        break;
+                // 既存のグラフを破棄して新しいグラフを作成（動的に対応）
+                if (lineCharts[year]) {
+                    lineCharts[year].destroy();
                 }
+                lineCharts[year] = new Chart(lineCtx, lineConfig);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error('There was a problem with the ajax operation:', textStatus, errorThrown);
