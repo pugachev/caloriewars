@@ -1,0 +1,13 @@
+# ローカル開発用のポート上書き設定。
+# docker compose は本ファイルを自動で読み込む(docker-compose.yml とマージされる)。
+#
+# 他プロジェクトとポートが競合するため、以下に変更している:
+#   - app: 8080 → 8090 (http://localhost:8090/calorie)
+#   - db : ホストへの 3306 公開を停止(コンテナ間通信のみで動作するため不要)
+# DBにホストから直接つなぎたい場合は db の ports に "13306:3306" 等を追加する。
+services:
+  app:
+    ports: !override
+      - "8090:80"
+  db:
+    ports: !override []

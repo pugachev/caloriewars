@@ -119,6 +119,25 @@
                                 <input type="text" id="utgtcalorie" name="tgtcalorie" class="form-control">
                             </div>
 
+                            @isset($frequentFoods)
+                                @if (count($frequentFoods))
+                                    <div class="w-100 mt-2">
+                                        <div class="text-muted small mb-1">よく使う入力（タップで反映）</div>
+                                        <div class="d-flex flex-wrap">
+                                            @foreach ($frequentFoods as $food)
+                                                <button type="button" class="btn btn-outline-primary btn-sm mr-1 mb-1 food-chip"
+                                                        data-category="{{ $food->tgtcategory }}"
+                                                        data-item="{{ $food->tgtitem }}"
+                                                        data-calorie="{{ $food->tgtcalorie }}">
+                                                    {{ $food->catename }}@if (trim($food->tgtitem ?? '') !== '')・{{ \Illuminate\Support\Str::limit($food->tgtitem, 10) }}@endif
+                                                    {{ $food->tgtcalorie }}kcal
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endisset
+
                             <div class="modal-footer d-flex justify-content-center">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
                                 <button type="submit" class="btn btn-primary">保存</button>
@@ -146,22 +165,38 @@
                         <div class="row">
                             <div class="form-group mb-1">
                                 <span class="col-2">日付</span>
-                                <input type="text" class="datepicker datepicker-dropdown" id="tgtdate" name="tgtdate">
+                                <input type="text" class="datepicker datepicker-dropdown" id="phys_tgtdate" name="tgtdate">
                             </div>
                             <div class="form-group mb-1">
                                 <span class="col-2">種類</span>
-                                    <select name="tgtcategory" id="tgtcategory" class="browser-default custom-select">
+                                    <select name="tgtcategory" id="phys_tgtcategory" class="browser-default custom-select">
                                         <?php echo $physical_cate_data ?? ''; ?>
                                     </select>
                             </div>
                             <div class="form-group mb-1">
                                 <span class="col-2">メモ</span>
-                                <input type="text" id="utgtitem" name="tgtitem" class="form-control">
+                                <input type="text" id="phys_tgtitem" name="tgtitem" class="form-control">
                             </div>
                             <div class="form-group mb-1">
                                 <span class="col-2">数値</span>
-                                <input type="text" id="utgtcalorie" name="tgtcalorie" class="form-control">
+                                <input type="text" id="phys_tgtcalorie" name="tgtcalorie" class="form-control">
                             </div>
+
+                            @isset($frequentSteppers)
+                                @if (count($frequentSteppers))
+                                    <div class="w-100 mt-2">
+                                        <div class="text-muted small mb-1">よく使う入力（タップで反映）</div>
+                                        <div class="d-flex flex-wrap">
+                                            @foreach ($frequentSteppers as $stepper)
+                                                <button type="button" class="btn btn-outline-success btn-sm mr-1 mb-1 stepper-chip"
+                                                        data-value="{{ 0 + $stepper->tgt_physical_data }}">
+                                                    ステッパー {{ 0 + $stepper->tgt_physical_data }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endisset
 
                             <div class="modal-footer d-flex justify-content-center">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
@@ -279,7 +314,11 @@
             });
 
             // モーダルでのdatepickerのz-index調整
+            // ※ format を必ず指定する。省略するとデフォルトの mm/dd/yyyy になり、
+            //   後続の update() で日付が化ける（例: 10/07/18）ため。
             $('.datepicker.datepicker-dropdown').datepicker({
+                language: 'ja',
+                format: 'yyyy/mm/dd',
                 beforeShow: function(input, inst){
                     setTimeout(function(){
                         $('#tgtdate')
@@ -289,6 +328,43 @@
                             );
                     },0);
                 }
+            });
+
+            // 今日をdatepickerにセットする。
+            // ※ 文字列ではなく Date オブジェクトを渡すこと。文字列を渡すと
+            //   datepickerのformat次第で誤パースされ日付が化ける（例: 10/07/18）。
+            function setToday($input) {
+                if (!$input.val()) {
+                    $input.datepicker('update', new Date());
+                }
+            }
+
+            // 摂取熱量モーダル: 日付を今日、時間帯を現在時刻から自動選択
+            $('#dataCreate').on('show.bs.modal', function() {
+                setToday($(this).find('input[name="tgtdate"]'));
+                const hour = new Date().getHours();
+                const timezone = hour < 11 ? '0' : (hour < 17 ? '1' : '2');
+                $(this).find('select[name="tgttimezone"]').val(timezone);
+            });
+
+            // 運動量・体重モーダル: 日付を今日に
+            $('#store_physical_info').on('show.bs.modal', function() {
+                setToday($(this).find('input[name="tgtdate"]'));
+            });
+
+            // よく使う入力チップ（摂取熱量）
+            $(document).on('click', '.food-chip', function() {
+                const $modal = $('#dataCreate');
+                $modal.find('select[name="tgtcategory"]').val(String($(this).data('category')));
+                $modal.find('input[name="tgtitem"]').val($(this).data('item'));
+                $modal.find('input[name="tgtcalorie"]').val($(this).data('calorie'));
+            });
+
+            // よく使う入力チップ（ステッパー）
+            $(document).on('click', '.stepper-chip', function() {
+                const $modal = $('#store_physical_info');
+                $modal.find('select[name="tgtcategory"]').val('205');
+                $modal.find('input[name="tgtcalorie"]').val($(this).data('value'));
             });
 
             // 日付フォーマット関数

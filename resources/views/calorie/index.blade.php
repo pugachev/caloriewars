@@ -30,6 +30,64 @@ foreach($physical_categories as $val){
     <div><h4><small>目標:<strong>1450kcal</strong></small></h4></div>
 </div>
 
+<!-- 週次バジェット・ストリークのダッシュボード -->
+<div class="px-5 mb-3">
+    <div class="row">
+        <!-- 今週の予算 -->
+        <div class="col-md-5 mb-2">
+            <div class="card h-100">
+                <div class="card-body py-2">
+                    <div class="text-muted small">今週の予算（第{{ $currentWeek }}週）</div>
+                    <div class="d-flex align-items-baseline">
+                        @if ($weekRemaining >= 0)
+                            <h3 class="mb-1 text-success">残り {{ number_format($weekRemaining) }}</h3>
+                        @else
+                            <h3 class="mb-1 text-danger">{{ number_format(abs($weekRemaining)) }} 超過</h3>
+                        @endif
+                        <span class="ml-1">kcal</span>
+                    </div>
+                    @php
+                        $usedPercent = $weekBudget > 0 ? min(100, round($weekConsumed / $weekBudget * 100)) : 0;
+                    @endphp
+                    <div class="progress mb-1" style="height: 10px;">
+                        <div class="progress-bar {{ $weekRemaining >= 0 ? 'bg-success' : 'bg-danger' }}"
+                             role="progressbar" style="width: {{ $usedPercent }}%;"
+                             aria-valuenow="{{ $usedPercent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="text-muted small">
+                        摂取 {{ number_format($weekConsumed) }} / 予算 {{ number_format($weekBudget) }} kcal
+                        （基礎代謝1450×7日 + 運動 {{ number_format($weekExercise) }}）
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ストリーク -->
+        <div class="col-md-4 mb-2">
+            <div class="card h-100">
+                <div class="card-body py-2">
+                    <div class="text-muted small">連続達成ストリーク</div>
+                    <div class="d-flex align-items-baseline">
+                        <h3 class="mb-1">🔥 {{ $currentStreak }}</h3><span class="ml-1">日連続</span>
+                    </div>
+                    <div class="text-muted small">自己ベスト: {{ $bestStreak }}日</div>
+                </div>
+            </div>
+        </div>
+        <!-- 今週の達成日数 -->
+        <div class="col-md-3 mb-2">
+            <div class="card h-100">
+                <div class="card-body py-2">
+                    <div class="text-muted small">今週の達成</div>
+                    <div class="d-flex align-items-baseline">
+                        <h3 class="mb-1">{{ $weekAchieved }} / {{ $weekElapsedDays }}</h3><span class="ml-1">日</span>
+                    </div>
+                    <div class="text-muted small">達成 = 確定摂取熱量が0以下</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- タブ全体をpx-5で囲む -->
 <div class="px-5">
     <!-- タブナビゲーション -->
@@ -69,6 +127,14 @@ foreach($physical_categories as $val){
              id="y{{ $year }}"
              role="tabpanel"
              aria-labelledby="y{{ $year }}-tab">
+
+            <!-- 達成度ヒートマップ（草カレンダー） -->
+            <div class="px-5 mt-3">
+                @include('calorie.partials.heatmap', [
+                    'year' => $year,
+                    'data' => $heatmapData[$year] ?? [],
+                ])
+            </div>
 
             <div class="table-responsive px-5">
                 <table class="table table-hover table-sm table-bordered" style="border-collapse: collapse;">
@@ -139,6 +205,8 @@ foreach($physical_categories as $val){
       }, 3000);
 
       $('.datepicker.datepicker-dropdown').datepicker({
+          language: 'ja',
+          format: 'yyyy/mm/dd',
           beforeShow: function(input, inst){
               setTimeout(function(){
                   $('#tgtdate')
@@ -257,6 +325,50 @@ foreach($physical_categories as $val){
       .no-bullets {
           list-style-type: none;
           padding-left: 0; /* インデントを削除する場合 */
+      }
+
+      /* 達成度ヒートマップ（草カレンダー） */
+      .heatmap-scroll {
+          overflow-x: auto;
+          padding-bottom: 4px;
+      }
+      .heatmap-months {
+          position: relative;
+          height: 16px;
+          font-size: 11px;
+          color: #6c757d;
+      }
+      .heatmap-months span {
+          position: absolute;
+          top: 0;
+          white-space: nowrap;
+      }
+      .heatmap-grid {
+          display: grid;
+          grid-auto-flow: column;
+          grid-template-rows: repeat(7, 12px);
+          grid-auto-columns: 12px;
+          gap: 3px;
+          width: max-content;
+      }
+      .hm-cell {
+          width: 12px;
+          height: 12px;
+          border-radius: 2px;
+      }
+      .hm-empty { background: transparent; }
+      .hm-none  { background: #ebedf0; }
+      .hm-g1    { background: #9be9a8; }
+      .hm-g2    { background: #40c463; }
+      .hm-g3    { background: #216e39; }
+      .hm-r1    { background: #ffb3b3; }
+      .hm-r2    { background: #e05252; }
+      .heatmap-legend {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          margin-top: 6px;
+          font-size: 11px;
       }
   </style>
 @endsection

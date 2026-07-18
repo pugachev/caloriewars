@@ -15,8 +15,9 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
         $this->call([
-            CalorieCategoriesTableSeeder::class,
-            CaloriesTableSeeder::class,
+            CategoriesTableSeeder::class,
+            PhysicalCategoriesTableSeeder::class,
+            CaloriesTableSeeder::class, // サンプルの摂取データ(数件)
         ]);
     }
 }

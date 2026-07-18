@@ -97,6 +97,99 @@ class CalorieController extends Controller
             $merged_data[] = $result;
         }
 
+        // ---- 週次バジェット・ストリーク・ヒートマップ用の集計 ----
+        $today       = date('Y-m-d');
+        $currentWeek = (int) $this->getWeekOfYear($today);
+
+        // 今週の開始日（日曜日）と経過日数
+        $weekOffset      = (int) date('w');
+        $weekStart       = date('Y-m-d', strtotime("-{$weekOffset} days"));
+        $weekElapsedDays = $weekOffset + 1;
+
+        // 今週の摂取・運動・達成日数を集計
+        $weekConsumed = 0;
+        $weekExercise = 0;
+        $weekAchieved = 0;
+        foreach ($merged_data as $result) {
+            if ($result->tgtdate >= $weekStart && $result->tgtdate <= $today) {
+                $weekConsumed += intval($result->sumcolorie);
+                $weekExercise += intval($result->confirmed_physical_calorie);
+                if ($result->confirmed_calorie <= 0) {
+                    $weekAchieved++;
+                }
+            }
+        }
+        // 週予算 = 基礎代謝1450×7日 + 今週の確定運動量
+        $weekBudget    = 1450 * 7 + $weekExercise;
+        $weekRemaining = $weekBudget - $weekConsumed;
+
+        // 日付 => 確定摂取熱量 のマップ（ストリーク・ヒートマップ用）
+        $byDate = [];
+        foreach ($merged_data as $result) {
+            $byDate[$result->tgtdate] = $result->confirmed_calorie;
+        }
+
+        // 現在のストリーク（達成 = 確定摂取熱量が0以下。今日が未入力なら昨日から遡る）
+        $currentStreak = 0;
+        $checkDate     = isset($byDate[$today]) ? $today : date('Y-m-d', strtotime('-1 day'));
+        while (isset($byDate[$checkDate]) && $byDate[$checkDate] <= 0) {
+            $currentStreak++;
+            $checkDate = date('Y-m-d', strtotime($checkDate . ' -1 day'));
+        }
+
+        // 最長ストリーク（暦日で連続した達成日）
+        $bestStreak = 0;
+        $run        = 0;
+        $prevDate   = null;
+        $prevOk     = false;
+        ksort($byDate);
+        foreach ($byDate as $date => $confirmed) {
+            if ($confirmed <= 0) {
+                if ($prevOk && $prevDate !== null && date('Y-m-d', strtotime($prevDate . ' +1 day')) === $date) {
+                    $run++;
+                } else {
+                    $run = 1;
+                }
+                $bestStreak = max($bestStreak, $run);
+                $prevOk     = true;
+            } else {
+                $run    = 0;
+                $prevOk = false;
+            }
+            $prevDate = $date;
+        }
+
+        // 年別のヒートマップデータ（日付 => 確定摂取熱量）
+        $heatmapData = [];
+        foreach ($byDate as $date => $confirmed) {
+            $heatmapData[substr($date, 0, 4)][$date] = $confirmed;
+        }
+
+        // ---- 入力モーダル用の頻出データ（直近90日） ----
+        $recentFrom = date('Y-m-d', strtotime('-90 days'));
+
+        // よく使う摂取熱量の入力（種類×メモ×熱量）
+        $frequentFoods = DB::table('calories')
+            ->selectRaw('tgtcategory, tgtitem, tgtcalorie, categories.catename as catename, COUNT(*) as cnt')
+            ->leftJoin('categories', 'categories.cateid', '=', 'calories.tgtcategory')
+            ->where('tgtcategory', '!=', '106')
+            ->where('tgtdate', '>=', $recentFrom)
+            ->groupBy('tgtcategory', 'tgtitem', 'tgtcalorie', 'categories.catename')
+            ->orderByDesc('cnt')
+            ->limit(8)
+            ->get();
+
+        // よく使うステッパーの入力値
+        $frequentSteppers = DB::table('physical_datas')
+            ->selectRaw('tgt_physical_data, COUNT(*) as cnt')
+            ->where('tgt_physical_category', 205)
+            ->where('tgt_physical_data', '>', 0)
+            ->where('tgt_physical_date', '>=', $recentFrom)
+            ->groupBy('tgt_physical_data')
+            ->orderByDesc('cnt')
+            ->limit(4)
+            ->get();
+
         // コレクションに変換してページネーション
         $collection = collect($merged_data);
 
@@ -157,6 +250,20 @@ class CalorieController extends Controller
             'yearlyData'          => $paginatedYearlyData,
             'categories'          => DB::table('categories')->get(),
             'physical_categories' => DB::table('physical_categories')->get(),
+            // 週次バジェット・ストリーク・ヒートマップ
+            'currentWeek'         => $currentWeek,
+            'weekElapsedDays'     => $weekElapsedDays,
+            'weekConsumed'        => $weekConsumed,
+            'weekExercise'        => $weekExercise,
+            'weekAchieved'        => $weekAchieved,
+            'weekBudget'          => $weekBudget,
+            'weekRemaining'       => $weekRemaining,
+            'currentStreak'       => $currentStreak,
+            'bestStreak'          => $bestStreak,
+            'heatmapData'         => $heatmapData,
+            // 入力モーダル用の頻出データ
+            'frequentFoods'       => $frequentFoods,
+            'frequentSteppers'    => $frequentSteppers,
         ]);
     }
 
